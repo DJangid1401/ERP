@@ -1,0 +1,1141 @@
+{
+  "companies": [
+    {
+      "id": "All",
+      "name": "All Companies",
+      "short": "ALL",
+      "color": "#4f46e5",
+      "sector": "Central Group Conglomerate",
+      "location": "Mumbai HQ"
+    },
+    {
+      "id": "Siona Plasto",
+      "name": "Siona Plasto",
+      "short": "SP",
+      "color": "#2563eb",
+      "sector": "Polymer & Packaging",
+      "location": "Vapi Plant"
+    },
+    {
+      "id": "Sudhi Impex",
+      "name": "Sudhi Impex",
+      "short": "SI",
+      "color": "#059669",
+      "sector": "Global Trade & Packaging",
+      "location": "Nhava Sheva"
+    },
+    {
+      "id": "Swati Enterprise",
+      "name": "Swati Enterprise",
+      "short": "SE",
+      "color": "#d97706",
+      "sector": "Industrial Supplies & Jobwork",
+      "location": "Ahmedabad"
+    },
+    {
+      "id": "Vilaano",
+      "name": "Vilaano",
+      "short": "VL",
+      "color": "#7c3aed",
+      "sector": "Consumer & Lifestyle Retail",
+      "location": "Bandra, Mumbai"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TSK-1042",
+      "title": "Q4 HDPE & PP Granules Bulk Procurement Audit",
+      "description": "Audit supplier batches for HDPE M60075 and verify melt-flow index certificates from Reliance Petrochemicals before unloading.",
+      "company": "Siona Plasto",
+      "assignees": [
+        "Deepak Sharma",
+        "Rajesh Sharma"
+      ],
+      "dueDate": "2026-11-28",
+      "dueTime": "17:00",
+      "priority": "High",
+      "status": "In Progress",
+      "recurrence": {
+        "type": "Weekly",
+        "days": [
+          "Mon",
+          "Thu"
+        ]
+      },
+      "attachmentRequired": true,
+      "approvalRequired": true,
+      "approver": "Satish Sir",
+      "attachments": [],
+      "comments": [
+        {
+          "id": "c-1",
+          "author": "Satish Sir",
+          "role": "Approver",
+          "text": "Please ensure lab COA reports are verified before clearance.",
+          "timestamp": "Yesterday, 14:30"
+        },
+        {
+          "id": "c-2",
+          "author": "Deepak Sharma",
+          "role": "Assignee",
+          "text": "First 2 trucks arrived at Vapi gate; samples sent to QC lab.",
+          "timestamp": "Today, 10:15"
+        }
+      ],
+      "extension": null,
+      "createdAt": "2026-11-20T10:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1043",
+      "title": "Container Customs Clearance & Bill of Lading",
+      "description": "Clear Lot #IMP-77 raw cashews at JNPT terminal and submit bill of lading copy to customs clearing agent.",
+      "company": "Sudhi Impex",
+      "assignees": [
+        "Meera Nair",
+        "Karan Malhotra"
+      ],
+      "dueDate": "2026-11-25",
+      "dueTime": "15:30",
+      "priority": "High",
+      "status": "Extension Requested",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": true,
+      "approvalRequired": true,
+      "approver": "Subhash Devle",
+      "attachments": [
+        {
+          "id": "att-1",
+          "name": "Bill_of_Lading_MSKU4419.pdf",
+          "size": "1.4 MB",
+          "url": "/uploads/sample.pdf",
+          "uploadedBy": "Meera Nair",
+          "uploadedAt": "Today, 09:15"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c-3",
+          "author": "Meera Nair",
+          "role": "Assignee",
+          "text": "ICEGATE server has port congestion; customs inspector requested till tomorrow 11 AM.",
+          "timestamp": "Today, 11:20"
+        }
+      ],
+      "extension": {
+        "proposedDueDate": "2026-11-26",
+        "proposedDueTime": "12:00",
+        "reason": "JNPT terminal server maintenance delayed ICEGATE verification.",
+        "requestedBy": "Meera Nair",
+        "requestedAt": "Today, 11:25",
+        "status": "Pending"
+      },
+      "createdAt": "2026-11-21T09:30:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1044",
+      "title": "West Zone Dealer Jobwork Challan Reconciliation",
+      "description": "Reconcile 15 CNC machined SS-304 flange challans with Mahavir Galva Coat & Apex Precision Works.",
+      "company": "Swati Enterprise",
+      "assignees": [
+        "Vikram Patel"
+      ],
+      "dueDate": "2026-11-22",
+      "dueTime": "18:00",
+      "priority": "Medium",
+      "status": "Completed",
+      "recurrence": {
+        "type": "Monthly",
+        "date": 22
+      },
+      "attachmentRequired": true,
+      "approvalRequired": false,
+      "approver": "",
+      "attachments": [
+        {
+          "id": "att-2",
+          "name": "Challan_Recon_Nov.xlsx",
+          "size": "240 KB",
+          "url": "/uploads/sample.xlsx",
+          "uploadedBy": "Vikram Patel",
+          "uploadedAt": "Nov 22, 17:40"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c-4",
+          "author": "Vikram Patel",
+          "role": "Assignee",
+          "text": "All 15 vendor challans tallied against GST portal returns.",
+          "timestamp": "Nov 22, 17:45"
+        }
+      ],
+      "extension": null,
+      "createdAt": "2026-11-15T11:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1045",
+      "title": "Winter Collection Flagship Store Merchandising",
+      "description": "Setup luxury display mannequins, cash register POS tags and lighting for Q4 Winter Lookbook.",
+      "company": "Vilaano",
+      "assignees": [
+        "Ananya Deshmukh",
+        "Rohan Kapoor"
+      ],
+      "dueDate": "2026-11-30",
+      "dueTime": "19:00",
+      "priority": "High",
+      "status": "Pending Approval",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": true,
+      "approvalRequired": true,
+      "approver": "Nirav Gogri",
+      "attachments": [
+        {
+          "id": "att-3",
+          "name": "Palladium_Lookbook_Signoff.jpg",
+          "size": "3.1 MB",
+          "url": "/uploads/sample.jpg",
+          "uploadedBy": "Ananya Deshmukh",
+          "uploadedAt": "Today, 12:30"
+        }
+      ],
+      "comments": [
+        {
+          "id": "c-5",
+          "author": "Ananya Deshmukh",
+          "role": "Assignee",
+          "text": "Store walkthrough complete; attached final photographs for Nirav Sir review.",
+          "timestamp": "Today, 12:35"
+        }
+      ],
+      "extension": null,
+      "createdAt": "2026-11-18T10:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1046",
+      "title": "Injection Molding Line-3 Preventive Maintenance",
+      "company": "Siona Plasto",
+      "description": "Check oil viscosity, replace hydraulic seals, and calibrate temperature thermocouples.",
+      "assignees": [
+        "Suresh Iyer"
+      ],
+      "dueDate": "2026-11-21",
+      "dueTime": "16:00",
+      "priority": "Low",
+      "status": "Completed",
+      "recurrence": {
+        "type": "Monthly",
+        "date": 21
+      },
+      "attachmentRequired": false,
+      "approvalRequired": false,
+      "approver": "",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-14T08:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1047",
+      "title": "500g Pouch to 25kg Master Carton Repacking Batch",
+      "company": "Sudhi Impex",
+      "description": "Batch lot repacking with nitrogen flushing for EU retail packaging standards.",
+      "assignees": [
+        "Karan Malhotra"
+      ],
+      "dueDate": "2026-12-02",
+      "dueTime": "18:00",
+      "priority": "Medium",
+      "status": "In Progress",
+      "recurrence": {
+        "type": "Daily"
+      },
+      "attachmentRequired": true,
+      "approvalRequired": true,
+      "approver": "Haresh Kalathiya",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-22T09:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1048",
+      "title": "GST E-Way Bill Compliance Automation",
+      "company": "Swati Enterprise",
+      "description": "Automate portal generation of E-way bills for interstate shipments over ₹50,000.",
+      "assignees": [
+        "Priya Joshi"
+      ],
+      "dueDate": "2026-11-26",
+      "dueTime": "14:00",
+      "priority": "High",
+      "status": "Pending",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": false,
+      "approvalRequired": false,
+      "approver": "",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-20T14:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1049",
+      "title": "Regional Distributor Restock & Loyalty Dispatch",
+      "company": "Vilaano",
+      "description": "Dispatch luxury promotional gift sets to Tier-1 retailers in Delhi & Bengaluru.",
+      "assignees": [
+        "Rohan Kapoor"
+      ],
+      "dueDate": "2026-11-20",
+      "dueTime": "17:00",
+      "priority": "Medium",
+      "status": "Completed",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": false,
+      "approvalRequired": false,
+      "approver": "",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-12T11:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1050",
+      "title": "Extrusion Line 02 Melt-Flow Index QC Certification",
+      "company": "Siona Plasto",
+      "description": "Conduct ASTM D1238 test on virgin LDPE pellets and record grams/10 min.",
+      "assignees": [
+        "Deepak Sharma"
+      ],
+      "dueDate": "2026-11-29",
+      "dueTime": "16:00",
+      "priority": "High",
+      "status": "In Progress",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": true,
+      "approvalRequired": true,
+      "approver": "Satish Sir",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-23T11:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1051",
+      "title": "JNPT Port Container Demurrage Waiver Filing",
+      "company": "Sudhi Impex",
+      "description": "Submit demurrage and detention waiver petition citing shipping line documentation delay.",
+      "assignees": [
+        "Meera Nair"
+      ],
+      "dueDate": "2026-11-27",
+      "dueTime": "13:00",
+      "priority": "High",
+      "status": "Pending",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": false,
+      "approvalRequired": true,
+      "approver": "Subhash Devle",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-23T15:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1052",
+      "title": "SS-304 Flange Batch Inspection & Raw Mill Test",
+      "company": "Swati Enterprise",
+      "description": "Inspect dimensional tolerance on CNC machined flanges and test tensile strength.",
+      "assignees": [
+        "Vikram Patel"
+      ],
+      "dueDate": "2026-11-28",
+      "dueTime": "15:00",
+      "priority": "High",
+      "status": "In Progress",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": true,
+      "approvalRequired": false,
+      "approver": "",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-22T13:00:00Z",
+      "createdBy": "Super Admin"
+    },
+    {
+      "id": "TSK-1053",
+      "title": "Palladium Store Luxury Footwear & POS Restock",
+      "company": "Vilaano",
+      "description": "Receive hand-stitched leather totes and fragrance sets at Bandra boutique warehouse.",
+      "assignees": [
+        "Ananya Deshmukh"
+      ],
+      "dueDate": "2026-11-24",
+      "dueTime": "18:00",
+      "priority": "Medium",
+      "status": "Completed",
+      "recurrence": {
+        "type": "None"
+      },
+      "attachmentRequired": false,
+      "approvalRequired": false,
+      "approver": "",
+      "attachments": [],
+      "comments": [],
+      "extension": null,
+      "createdAt": "2026-11-19T10:00:00Z",
+      "createdBy": "Super Admin"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "recipient": "Deepak Sharma",
+      "taskId": "TSK-1042",
+      "title": "New Task Assigned: Q4 HDPE Procurement Audit",
+      "message": "You have been assigned to Q4 HDPE & PP Granules Bulk Procurement Audit by Super Admin.",
+      "type": "TASK_ASSIGNED",
+      "company": "Siona Plasto",
+      "read": false,
+      "createdAt": "Today, 10:00"
+    },
+    {
+      "id": "notif-2",
+      "recipient": "Deepak Sharma",
+      "taskId": "TSK-1050",
+      "title": "New Task Assigned: Extrusion Line QC Certification",
+      "message": "You have been assigned to Extrusion Line 02 QC Certification by Super Admin.",
+      "type": "TASK_ASSIGNED",
+      "company": "Siona Plasto",
+      "read": false,
+      "createdAt": "Today, 11:00"
+    },
+    {
+      "id": "notif-3",
+      "recipient": "Satish Sir",
+      "taskId": "TSK-1042",
+      "title": "Approval Required: HDPE Procurement Audit",
+      "message": "Deepak Sharma submitted work requiring your final approval.",
+      "type": "APPROVAL_PENDING",
+      "company": "Siona Plasto",
+      "read": false,
+      "createdAt": "Today, 10:20"
+    },
+    {
+      "id": "notif-4",
+      "recipient": "Meera Nair",
+      "taskId": "TSK-1043",
+      "title": "Extension Under Review: Customs Clearance",
+      "message": "Your request for due date extension till Nov 26 is pending review by Subhash Devle.",
+      "type": "EXTENSION_REQUEST",
+      "company": "Sudhi Impex",
+      "read": false,
+      "createdAt": "Today, 11:25"
+    },
+    {
+      "id": "notif-5",
+      "recipient": "Subhash Devle",
+      "taskId": "TSK-1043",
+      "title": "Extension Requested by Meera Nair",
+      "message": "Meera Nair requested a due date extension for Container Customs Clearance citing port delay.",
+      "type": "EXTENSION_REQUEST",
+      "company": "Sudhi Impex",
+      "read": false,
+      "createdAt": "Today, 11:25"
+    },
+    {
+      "id": "notif-6",
+      "recipient": "Nirav Gogri",
+      "taskId": "TSK-1045",
+      "title": "Action Needed: Winter Collection Sign-off",
+      "message": "Ananya Deshmukh submitted display photographs for your approval.",
+      "type": "APPROVAL_PENDING",
+      "company": "Vilaano",
+      "read": false,
+      "createdAt": "Today, 12:35"
+    }
+  ],
+  "employees": [
+    {
+      "id": "EMP-201",
+      "name": "Deepak Sharma",
+      "role": "Plant Operations Head",
+      "department": "Manufacturing",
+      "company": "Siona Plasto",
+      "status": "Present",
+      "shift": "General (09:00 - 18:00)",
+      "email": "deepak@sionaplasto.in"
+    },
+    {
+      "id": "EMP-202",
+      "name": "Meera Nair",
+      "role": "Senior EXIM Manager",
+      "department": "Logistics & Trade",
+      "company": "Sudhi Impex",
+      "status": "Present",
+      "shift": "General (09:30 - 18:30)",
+      "email": "meera@sudhiimpex.com"
+    },
+    {
+      "id": "EMP-203",
+      "name": "Vikram Patel",
+      "role": "Regional Supply Lead",
+      "department": "Distribution",
+      "company": "Swati Enterprise",
+      "status": "Present",
+      "shift": "General (09:00 - 18:00)",
+      "email": "vikram@swatienterprise.in"
+    },
+    {
+      "id": "EMP-204",
+      "name": "Ananya Deshmukh",
+      "role": "Creative Brand Director",
+      "department": "Design & Retail",
+      "company": "Vilaano",
+      "status": "Present",
+      "shift": "Flexi (10:00 - 19:00)",
+      "email": "ananya@vilaano.com"
+    },
+    {
+      "id": "EMP-205",
+      "name": "Suresh Iyer",
+      "role": "Quality Assurance Engineer",
+      "department": "Quality Control",
+      "company": "Siona Plasto",
+      "status": "On Leave",
+      "shift": "Shift A (07:00 - 15:30)",
+      "email": "s.iyer@sionaplasto.in"
+    },
+    {
+      "id": "EMP-206",
+      "name": "Karan Malhotra",
+      "role": "Freight & Customs Specialist",
+      "department": "Compliance",
+      "company": "Sudhi Impex",
+      "status": "Present",
+      "shift": "General (09:30 - 18:30)",
+      "email": "karan@sudhiimpex.com"
+    },
+    {
+      "id": "EMP-207",
+      "name": "Priya Joshi",
+      "role": "Accounts & Tax Controller",
+      "department": "Finance",
+      "company": "Swati Enterprise",
+      "status": "On Leave",
+      "shift": "General (09:30 - 18:30)",
+      "email": "priya@swatienterprise.in"
+    },
+    {
+      "id": "EMP-208",
+      "name": "Rohan Kapoor",
+      "role": "Omnichannel Retail Lead",
+      "department": "E-Commerce",
+      "company": "Vilaano",
+      "status": "Present",
+      "shift": "Flexi (10:00 - 19:00)",
+      "email": "rohan@vilaano.com"
+    },
+    {
+      "id": "EMP-209",
+      "name": "Rajesh Sharma",
+      "role": "Operations Supervisor",
+      "department": "Shop Floor",
+      "company": "Siona Plasto",
+      "status": "Present",
+      "shift": "Shift B (15:00 - 23:30)",
+      "email": "r.sharma@sionaplasto.in"
+    },
+    {
+      "id": "EMP-210",
+      "name": "Satish Sir",
+      "role": "Group Technical Director",
+      "department": "Executive Directorate",
+      "company": "All",
+      "status": "Present",
+      "shift": "Executive (09:00 - 18:00)",
+      "email": "satish.director@erphub.in"
+    },
+    {
+      "id": "EMP-211",
+      "name": "Subhash Devle",
+      "role": "VP EXIM Operations",
+      "department": "Supply Chain",
+      "company": "Sudhi Impex",
+      "status": "Present",
+      "shift": "General (09:30 - 18:30)",
+      "email": "subhash@sudhiimpex.com"
+    },
+    {
+      "id": "EMP-212",
+      "name": "Nirav Gogri",
+      "role": "Managing Partner - Retail",
+      "department": "Commercial",
+      "company": "Vilaano",
+      "status": "Present",
+      "shift": "General (10:00 - 19:00)",
+      "email": "nirav@vilaano.com"
+    },
+    {
+      "id": "EMP-213",
+      "name": "Haresh Kalathiya",
+      "role": "General Manager Plant",
+      "department": "Operations",
+      "company": "Swati Enterprise",
+      "status": "Present",
+      "shift": "General (09:00 - 18:00)",
+      "email": "haresh@swatienterprise.in"
+    }
+  ],
+  "users": [
+    {
+      "id": "USR-01",
+      "name": "Deepak Sharma",
+      "email": "deepak.sharma@erphub.in",
+      "role": "Super Admin",
+      "companies": [
+        "Siona Plasto",
+        "Sudhi Impex",
+        "Swati Enterprise",
+        "Vilaano"
+      ],
+      "active": true,
+      "lastLogin": "Today, 15:45"
+    },
+    {
+      "id": "USR-02",
+      "name": "Rajesh Sharma",
+      "email": "r.sharma@sionaplasto.in",
+      "role": "Operations Manager",
+      "companies": [
+        "Siona Plasto"
+      ],
+      "active": true,
+      "lastLogin": "Today, 11:45"
+    },
+    {
+      "id": "USR-03",
+      "name": "Meera Nair",
+      "email": "meera@sudhiimpex.com",
+      "role": "Operations Manager",
+      "companies": [
+        "Sudhi Impex",
+        "Swati Enterprise"
+      ],
+      "active": true,
+      "lastLogin": "Today, 13:05"
+    },
+    {
+      "id": "USR-04",
+      "name": "Ananya Deshmukh",
+      "email": "ananya@vilaano.com",
+      "role": "Sales Lead",
+      "companies": [
+        "Vilaano"
+      ],
+      "active": true,
+      "lastLogin": "Yesterday, 18:20"
+    },
+    {
+      "id": "USR-05",
+      "name": "Vikram Patel",
+      "email": "vikram@swatienterprise.in",
+      "role": "Production Supervisor",
+      "companies": [
+        "Swati Enterprise"
+      ],
+      "active": true,
+      "lastLogin": "Today, 10:15"
+    },
+    {
+      "id": "USR-06",
+      "name": "Priya Joshi",
+      "email": "priya@swatienterprise.in",
+      "role": "Accounts Executive",
+      "companies": [
+        "Swati Enterprise",
+        "Siona Plasto"
+      ],
+      "active": true,
+      "lastLogin": "Today, 09:40"
+    },
+    {
+      "id": "USR-07",
+      "name": "Satish Sir",
+      "email": "satish.director@erphub.in",
+      "role": "Super Admin",
+      "companies": [
+        "Siona Plasto",
+        "Sudhi Impex",
+        "Swati Enterprise",
+        "Vilaano"
+      ],
+      "active": true,
+      "lastLogin": "Today, 14:10"
+    }
+  ],
+  "roles": [
+    {
+      "id": "ROL-01",
+      "name": "Super Admin",
+      "description": "Full unrestricted governance across all subsidiaries, HRMS, and settings.",
+      "scope": "All Companies (Group Wide)",
+      "level": "L1 • Executive",
+      "userCount": 2
+    },
+    {
+      "id": "ROL-02",
+      "name": "Operations Manager",
+      "description": "Oversees plant throughput, task allocation, and vendor dispatch.",
+      "scope": "Assigned Subsidiaries",
+      "level": "L2 • Management",
+      "userCount": 2
+    },
+    {
+      "id": "ROL-03",
+      "name": "Accounts Executive",
+      "description": "Manages GST R1/3B filings, Tally Prime ledgers, and billing.",
+      "scope": "Assigned Subsidiaries",
+      "level": "L3 • Finance",
+      "userCount": 1
+    },
+    {
+      "id": "ROL-04",
+      "name": "Production Supervisor",
+      "description": "Controls batch floor logs, raw materials, and QR tags.",
+      "scope": "Plant / Unit Level",
+      "level": "L3 • Operations",
+      "userCount": 1
+    },
+    {
+      "id": "ROL-05",
+      "name": "Sales Lead",
+      "description": "Handles client orders, proforma quotes, and transporter tracking.",
+      "scope": "Assigned Subsidiaries",
+      "level": "L3 • Commercial",
+      "userCount": 1
+    }
+  ],
+  "rights": {
+    "Super Admin": {
+      "Dashboard": true,
+      "Task": true,
+      "Production": true,
+      "Inventory": true,
+      "Sales": true,
+      "Accounts": true,
+      "HRMS": true,
+      "UserManagement": true
+    },
+    "Operations Manager": {
+      "Dashboard": true,
+      "Task": true,
+      "Production": true,
+      "Inventory": true,
+      "Sales": true,
+      "Accounts": false,
+      "HRMS": true,
+      "UserManagement": false
+    },
+    "Accounts Executive": {
+      "Dashboard": true,
+      "Task": true,
+      "Production": false,
+      "Inventory": true,
+      "Sales": true,
+      "Accounts": true,
+      "HRMS": false,
+      "UserManagement": false
+    },
+    "Production Supervisor": {
+      "Dashboard": true,
+      "Task": true,
+      "Production": true,
+      "Inventory": true,
+      "Sales": false,
+      "Accounts": false,
+      "HRMS": false,
+      "UserManagement": false
+    },
+    "Sales Lead": {
+      "Dashboard": true,
+      "Task": true,
+      "Production": false,
+      "Inventory": true,
+      "Sales": true,
+      "Accounts": false,
+      "HRMS": false,
+      "UserManagement": false
+    }
+  },
+  "controlModules": [
+    {
+      "id": "mod-gst",
+      "name": "Automated GST & E-Invoicing Bridge",
+      "desc": "Real-time IRN generation and tax ledger reconciliation",
+      "enabled": true,
+      "scope": "All Entities"
+    },
+    {
+      "id": "mod-bio",
+      "name": "Biometric HRMS Sync",
+      "desc": "Live plant and corporate attendance webhook bridge",
+      "enabled": true,
+      "scope": "Plant & HQ"
+    },
+    {
+      "id": "mod-exim",
+      "name": "EXIM Customs & ICEGATE Tracker",
+      "desc": "Automated bill of lading and container status updates",
+      "enabled": true,
+      "scope": "Sudhi Impex"
+    },
+    {
+      "id": "mod-pos",
+      "name": "Omnichannel POS Bridge",
+      "desc": "Instant retail store inventory and loyalty sync",
+      "enabled": true,
+      "scope": "Vilaano"
+    },
+    {
+      "id": "mod-2fa",
+      "name": "Strict 2FA & Hardware Security Token",
+      "desc": "Mandatory verification for Admin transactions and approvals",
+      "enabled": true,
+      "scope": "Global Security"
+    }
+  ],
+  "operations": {
+    "Siona Plasto": {
+      "metrics": {
+        "orders": "42 Active",
+        "output": "18,450 KG",
+        "inventoryValue": "₹68.40 L",
+        "pendingDispatches": 6
+      },
+      "production": [
+        {
+          "batchId": "BCH-SP-901",
+          "product": "HDPE Injection Molded Crates (Blue)",
+          "machine": "IMM-Line 01",
+          "rawMaterial": "HDPE Granules M60075 (2,400 KG)",
+          "output": "1,180 Units",
+          "status": "Running"
+        },
+        {
+          "batchId": "BCH-SP-902",
+          "product": "PP Blow-Molded Jerrycans 20L",
+          "machine": "BM-Line 03",
+          "rawMaterial": "PP Copolymer B120 (1,850 KG)",
+          "output": "920 Units",
+          "status": "Completed"
+        },
+        {
+          "batchId": "BCH-SP-903",
+          "product": "LDPE Shrink Film Rolls 55 Micron",
+          "machine": "EXT-Line 02",
+          "rawMaterial": "LDPE Virgin 24FS040 (3,100 KG)",
+          "output": "3,040 KG",
+          "status": "QC Pending"
+        }
+      ],
+      "inventory": [
+        {
+          "sku": "SP-RM-101",
+          "name": "HDPE Virgin Granules (Reliance)",
+          "category": "Raw Material",
+          "stock": "14,200 KG",
+          "minStock": "5,000 KG",
+          "qrTag": "QR-SP-8810",
+          "status": "Optimal"
+        },
+        {
+          "sku": "SP-RM-104",
+          "name": "Masterbatch Royal Blue Pigment",
+          "category": "Additive",
+          "stock": "340 KG",
+          "minStock": "500 KG",
+          "qrTag": "QR-SP-8814",
+          "status": "Low Stock"
+        },
+        {
+          "sku": "SP-FG-205",
+          "name": "Industrial Crates 600x400x320mm",
+          "category": "Finished Goods",
+          "stock": "3,450 Units",
+          "minStock": "1,000 Units",
+          "qrTag": "QR-SP-8902",
+          "status": "Optimal"
+        },
+        {
+          "sku": "SP-FG-209",
+          "name": "20L Chemical Jerrycan UN-Certified",
+          "category": "Finished Goods",
+          "stock": "620 Units",
+          "minStock": "800 Units",
+          "qrTag": "QR-SP-8911",
+          "status": "Low Stock"
+        }
+      ],
+      "sales": [
+        {
+          "orderId": "SO-SP-441",
+          "customer": "Amul Dairy Packaging Div.",
+          "items": "1,500 HDPE Crates",
+          "invoiceNo": "GST/SP/26-27/812",
+          "amount": "₹6,45,000",
+          "transporter": "VRL Logistics (GJ-15-AT-9021)",
+          "status": "Dispatched"
+        },
+        {
+          "orderId": "SO-SP-442",
+          "customer": "Asian Paints Ancillary Unit",
+          "items": "2,200 Jerrycans 20L",
+          "invoiceNo": "GST/SP/26-27/815",
+          "amount": "₹4,92,800",
+          "transporter": "TCI Freight (Gate Pass Ready)",
+          "status": "Ready to Dispatch"
+        }
+      ],
+      "accounts": {
+        "receivables": "₹42,80,000",
+        "payables": "₹19,45,000",
+        "gstR1Status": "Filed (Oct 2026)",
+        "gstR3bLiability": "₹4,12,600",
+        "tallySync": "Synced 10 mins ago",
+        "ledgers": [
+          {
+            "party": "Reliance Petrochemicals Ltd.",
+            "type": "Vendor Bill",
+            "ref": "INV-RIL-9928",
+            "amount": "₹12,40,000",
+            "due": "Nov 30, 2026",
+            "status": "Due Soon"
+          },
+          {
+            "party": "Amul Dairy Packaging Div.",
+            "type": "Receivable",
+            "ref": "GST/SP/26-27/812",
+            "amount": "₹6,45,000",
+            "due": "Dec 12, 2026",
+            "status": "On Track"
+          }
+        ]
+      }
+    },
+    "Sudhi Impex": {
+      "metrics": {
+        "orders": "29 EXIM Lots",
+        "output": "12,600 KG Packed",
+        "inventoryValue": "₹1.14 Cr",
+        "pendingDispatches": 4
+      },
+      "production": [
+        {
+          "batchId": "LOT-SI-511",
+          "product": "500g Stand-Up Pouches -> 25KG Cartons",
+          "machine": "Auto-Packer B2",
+          "rawMaterial": "Bulk Raw Lot #IMP-77 (4,500 KG)",
+          "output": "180 Cartons",
+          "status": "Running"
+        },
+        {
+          "batchId": "LOT-SI-512",
+          "product": "Vacuum-Sealed Grade-A Cashew Tins",
+          "machine": "Nitrogen Line 01",
+          "rawMaterial": "Raw W320 Bulk Lot (3,200 KG)",
+          "output": "320 Tins",
+          "status": "Completed"
+        }
+      ],
+      "inventory": [
+        {
+          "sku": "SI-IMP-301",
+          "name": "Imported W320 Cashew Bulk (Benin)",
+          "category": "Import Lot",
+          "stock": "18,500 KG",
+          "minStock": "6,000 KG",
+          "qrTag": "QR-SI-3301",
+          "status": "Optimal"
+        },
+        {
+          "sku": "SI-PKG-308",
+          "name": "500g Barrier Foil Pouches",
+          "category": "Packaging",
+          "stock": "4,200 Units",
+          "minStock": "10,000 Units",
+          "qrTag": "QR-SI-3308",
+          "status": "Low Stock"
+        }
+      ],
+      "sales": [
+        {
+          "orderId": "EXP-SI-704",
+          "customer": "EuroFoods GmbH (Rotterdam)",
+          "items": "400 Master Cartons",
+          "invoiceNo": "EXP/SI/26-27/109",
+          "amount": "₹28,90,000",
+          "transporter": "Maersk Line #MSKU4419",
+          "status": "Dispatched"
+        }
+      ],
+      "accounts": {
+        "receivables": "₹64,10,000",
+        "payables": "₹31,20,000",
+        "gstR1Status": "LUT Export Filed",
+        "gstR3bLiability": "₹1,84,200",
+        "tallySync": "Synced 5 mins ago",
+        "ledgers": [
+          {
+            "party": "JNPT Customs & Clearing Agent",
+            "type": "Freight Bill",
+            "ref": "CHA-8821",
+            "amount": "₹2,45,000",
+            "due": "Nov 26, 2026",
+            "status": "Due Soon"
+          }
+        ]
+      }
+    },
+    "Swati Enterprise": {
+      "metrics": {
+        "orders": "56 Challans",
+        "output": "3,420 Jobwork Units",
+        "inventoryValue": "₹52.90 L",
+        "pendingDispatches": 8
+      },
+      "production": [
+        {
+          "batchId": "JW-SE-601",
+          "product": "CNC Machined SS-304 Hydraulic Flanges",
+          "machine": "Vendor: Apex Precision",
+          "rawMaterial": "SS-304 Round Bars (1,400 KG)",
+          "output": "680 Flanges",
+          "status": "Running"
+        }
+      ],
+      "inventory": [
+        {
+          "sku": "SE-IND-401",
+          "name": "SS-304 Seamless Pipes 2-Inch",
+          "category": "Industrial Supply",
+          "stock": "1,840 Meters",
+          "minStock": "600 Meters",
+          "qrTag": "QR-SE-5501",
+          "status": "Optimal"
+        }
+      ],
+      "sales": [
+        {
+          "orderId": "SO-SE-912",
+          "customer": "Larsen & Toubro EPC Site",
+          "items": "400 Galvanized Cable Trays",
+          "invoiceNo": "GST/SE/26-27/610",
+          "amount": "₹8,75,000",
+          "transporter": "Gati KWE (GJ-01-XX-7741)",
+          "status": "Dispatched"
+        }
+      ],
+      "accounts": {
+        "receivables": "₹38,50,000",
+        "payables": "₹16,90,000",
+        "gstR1Status": "Filed (Oct 2026)",
+        "gstR3bLiability": "₹3,28,900",
+        "tallySync": "Synced 18 mins ago",
+        "ledgers": [
+          {
+            "party": "Apex Precision Works",
+            "type": "Jobwork Bill",
+            "ref": "JW-BILL-118",
+            "amount": "₹2,15,000",
+            "due": "Nov 28, 2026",
+            "status": "Due Soon"
+          }
+        ]
+      }
+    },
+    "Vilaano": {
+      "metrics": {
+        "orders": "138 Retail Orders",
+        "output": "4,850 Apparel Units",
+        "inventoryValue": "₹94.20 L",
+        "pendingDispatches": 11
+      },
+      "production": [
+        {
+          "batchId": "COL-VL-201",
+          "product": "Winter Merino Knitwear & Structured Blazers",
+          "machine": "Atelier Unit 01",
+          "rawMaterial": "Italian Merino Wool (1,200m)",
+          "output": "840 Garments",
+          "status": "Running"
+        }
+      ],
+      "inventory": [
+        {
+          "sku": "VL-APP-801",
+          "name": "Vilaano Cashmere Overcoat (Charcoal)",
+          "category": "Winter Apparel",
+          "stock": "480 Units",
+          "minStock": "150 Units",
+          "qrTag": "QR-VL-9101",
+          "status": "Optimal"
+        }
+      ],
+      "sales": [
+        {
+          "orderId": "RET-VL-1201",
+          "customer": "Palladium Flagship Store",
+          "items": "420 Winter SKUs",
+          "invoiceNo": "GST/VL/26-27/904",
+          "amount": "₹16,80,000",
+          "transporter": "Delhivery Express Air",
+          "status": "Dispatched"
+        }
+      ],
+      "accounts": {
+        "receivables": "₹29,60,000",
+        "payables": "₹11,80,000",
+        "gstR1Status": "Filed (Oct 2026)",
+        "gstR3bLiability": "₹5,42,100",
+        "tallySync": "Synced 9 mins ago",
+        "ledgers": [
+          {
+            "party": "DLF Emporio Retail Settlement",
+            "type": "Store Receivable",
+            "ref": "GST/VL/26-27/909",
+            "amount": "₹11,45,000",
+            "due": "Dec 05, 2026",
+            "status": "On Track"
+          }
+        ]
+      }
+    }
+  }
+}
