@@ -690,6 +690,54 @@ const getCompanyBadgeStyle = (companyName) => {
   }
 };
 
+
+// =========================================================================
+// MULTI-COMPANY INVENTORY DATA (Stock List, Stock In, Stock Out)
+// Siona Plasto, Sudhi Impex, Swati Enterprise, Vilaano
+// =========================================================================
+const INITIAL_STOCK_LIST = [
+  // Siona Plasto (Polymer & Industrial Packaging)
+  { sku: 'SP-RM-101', name: 'HDPE Virgin Granules (Reliance M60075)', company: 'Siona Plasto', category: 'Raw Material Polymer', stock: 14200, uom: 'KG', minStock: 5000, location: 'Vapi Plant - Silo 2', unitPrice: 92, qrTag: 'QR-SP-8810', status: 'Optimal' },
+  { sku: 'SP-RM-104', name: 'Masterbatch Royal Blue Pigment', company: 'Siona Plasto', category: 'Color Additive', stock: 340, uom: 'KG', minStock: 500, location: 'Vapi Plant - Chem Store', unitPrice: 240, qrTag: 'QR-SP-8814', status: 'Low Stock' },
+  { sku: 'SP-FG-205', name: 'Industrial Crates 600x400x320mm', company: 'Siona Plasto', category: 'Finished Goods', stock: 3450, uom: 'Units', minStock: 1000, location: 'Vapi Plant - Bay C', unitPrice: 420, qrTag: 'QR-SP-8902', status: 'Optimal' },
+  { sku: 'SP-FG-209', name: '20L Chemical Jerrycan UN-Certified', company: 'Siona Plasto', category: 'Finished Goods', stock: 620, uom: 'Units', minStock: 800, location: 'Vapi Plant - Bay A', unitPrice: 185, qrTag: 'QR-SP-8911', status: 'Low Stock' },
+
+  // Sudhi Impex (Global Agro Trade & Cashew Packaging)
+  { sku: 'SI-IMP-301', name: 'Raw Cashew Nuts in Shell (Benin Origin)', company: 'Sudhi Impex', category: 'Import Raw Consignment', stock: 18500, uom: 'KG', minStock: 6000, location: 'Nhava Sheva - Bonded Cold Store', unitPrice: 145, qrTag: 'QR-SI-3301', status: 'Optimal' },
+  { sku: 'SI-FG-304', name: 'Processed Cashew Kernels Grade W-320', company: 'Sudhi Impex', category: 'Export Finished Goods', stock: 6400, uom: 'KG', minStock: 2000, location: 'APMC Vashi Cold Hub - Rack 4', unitPrice: 680, qrTag: 'QR-SI-3304', status: 'Optimal' },
+  { sku: 'SI-PKG-308', name: '500g Stand-Up Nitrogen Foil Pouches', company: 'Sudhi Impex', category: 'Packaging Material', stock: 4200, uom: 'Units', minStock: 10000, location: 'Nhava Sheva - Pack Store', unitPrice: 8.5, qrTag: 'QR-SI-3308', status: 'Low Stock' },
+  { sku: 'SI-FG-312', name: 'Vacuum Tins Grade W-240 Premium (10KG)', company: 'Sudhi Impex', category: 'Export Finished Goods', stock: 320, uom: 'Tins', minStock: 150, location: 'APMC Vashi Export Bay', unitPrice: 7200, qrTag: 'QR-SI-3312', status: 'Optimal' },
+
+  // Swati Enterprise (Industrial Supplies & CNC Jobwork)
+  { sku: 'SE-IND-401', name: 'SS-304 Seamless Pipes 2-Inch Sch 40', company: 'Swati Enterprise', category: 'Industrial Supplies', stock: 1840, uom: 'Meters', minStock: 600, location: 'Ahmedabad Central Yard - Bay 1', unitPrice: 620, qrTag: 'QR-SE-5501', status: 'Optimal' },
+  { sku: 'SE-JW-405', name: 'Forged CNC Machined Hydraulic Flanges 4-Inch', company: 'Swati Enterprise', category: 'Jobwork Flanges', stock: 680, uom: 'Units', minStock: 300, location: 'Sanand Jobwork Depot - Rack B', unitPrice: 1450, qrTag: 'QR-SE-5505', status: 'Optimal' },
+  { sku: 'SE-FST-408', name: 'High-Tensile Hex Head Bolts M16x75 Gr 8.8', company: 'Swati Enterprise', category: 'Fasteners', stock: 850, uom: 'KG', minStock: 1200, location: 'Ahmedabad Yard - Bin 14', unitPrice: 110, qrTag: 'QR-SE-5508', status: 'Low Stock' },
+  { sku: 'SE-IND-412', name: 'Heavy Duty Soluble Cutting Coolant (210L)', company: 'Swati Enterprise', category: 'Shop-Floor Consumable', stock: 28, uom: 'Drums', minStock: 10, location: 'Ahmedabad Yard - Hazmat Bay', unitPrice: 14800, qrTag: 'QR-SE-5512', status: 'Optimal' },
+
+  // Vilaano (Luxury Retail, Fashion & Lifestyle)
+  { sku: 'VL-APP-801', name: 'Vilaano Cashmere-Blend Tailored Overcoat', company: 'Vilaano', category: 'Winter Apparel', stock: 480, uom: 'Units', minStock: 150, location: 'Bandra Flagship Vault - Rack A1', unitPrice: 12500, qrTag: 'QR-VL-9101', status: 'Optimal' },
+  { sku: 'VL-FTW-804', name: 'Italian Calfskin Chelsea Boots (Cognac)', company: 'Vilaano', category: 'Footwear', stock: 210, uom: 'Pairs', minStock: 100, location: 'Palladium Boutique Vault', unitPrice: 8900, qrTag: 'QR-VL-9104', status: 'Optimal' },
+  { sku: 'VL-LXR-808', name: 'Artisan Eau de Parfum 100ml (Oud Bergamot)', company: 'Vilaano', category: 'Fragrance & Beauty', stock: 95, uom: 'Bottles', minStock: 250, location: 'Bhiwandi E-Commerce DC - Sec 3', unitPrice: 4200, qrTag: 'QR-VL-9108', status: 'Low Stock' },
+  { sku: 'VL-ACC-812', name: 'Full-Grain Leather Weekender Duffle Bag', company: 'Vilaano', category: 'Leather Goods', stock: 310, uom: 'Units', minStock: 80, location: 'Bandra Flagship Vault - Rack C2', unitPrice: 7800, qrTag: 'QR-VL-9112', status: 'Optimal' },
+];
+
+const INITIAL_STOCK_IN = [
+  { id: 'INW-SP-701', date: '2026-11-23', company: 'Siona Plasto', sku: 'SP-RM-101', itemName: 'HDPE Virgin Granules (Reliance M60075)', quantity: 4200, uom: 'KG', supplier: 'Reliance Petrochemicals Ltd. (Dahej)', referenceNo: 'PO-SP-26-8812 / LR-991', location: 'Vapi Plant - Silo 2', receivedBy: 'Deepak Sharma', status: 'QC Approved' },
+  { id: 'INW-SI-702', date: '2026-11-22', company: 'Sudhi Impex', sku: 'SI-IMP-301', itemName: 'Raw Cashew Nuts in Shell (Benin Origin)', quantity: 8500, uom: 'KG', supplier: 'Societe Agro-Benin Cotonou', referenceNo: 'BL-MSKU-4419 / ICEGATE-882', location: 'Nhava Sheva Cold Store', receivedBy: 'Meera Nair', status: 'Customs Cleared' },
+  { id: 'INW-SE-703', date: '2026-11-24', company: 'Swati Enterprise', sku: 'SE-JW-405', itemName: 'Forged CNC Machined Hydraulic Flanges 4-Inch', quantity: 680, uom: 'Units', supplier: 'Apex Precision Works (Sanand)', referenceNo: 'JW-CHALLAN-312', location: 'Sanand Jobwork Depot', receivedBy: 'Vikram Patel', status: 'Dimension Passed' },
+  { id: 'INW-VL-704', date: '2026-11-21', company: 'Vilaano', sku: 'VL-APP-801', itemName: 'Vilaano Cashmere-Blend Tailored Overcoat', quantity: 150, uom: 'Units', supplier: 'Atelier Milano Luxury Apparels', referenceNo: 'AIR-AWB-6641 / INV-810', location: 'Bandra Flagship Vault', receivedBy: 'Ananya Deshmukh', status: 'Barcode Tagged' },
+  { id: 'INW-SP-705', date: '2026-11-20', company: 'Siona Plasto', sku: 'SP-RM-104', itemName: 'Masterbatch Royal Blue Pigment', quantity: 200, uom: 'KG', supplier: 'Clariant Chemicals Vapi', referenceNo: 'INV-CC-901', location: 'Vapi Plant - Chem Store', receivedBy: 'Suresh Iyer', status: 'QC Approved' },
+  { id: 'INW-SI-706', date: '2026-11-19', company: 'Sudhi Impex', sku: 'SI-PKG-308', itemName: '500g Stand-Up Nitrogen Foil Pouches', quantity: 5000, uom: 'Units', supplier: 'Uflex Packaging Ltd.', referenceNo: 'PO-SI-4410', location: 'Nhava Sheva - Pack Store', receivedBy: 'Karan Malhotra', status: 'Sealed & Stored' },
+];
+
+const INITIAL_STOCK_OUT = [
+  { id: 'OUT-SP-901', date: '2026-11-24', company: 'Siona Plasto', sku: 'SP-FG-205', itemName: 'Industrial Crates 600x400x320mm', quantity: 1500, uom: 'Units', destination: 'Amul Dairy Packaging Div. (Anand)', referenceNo: 'GST/SP/26-27/812 • EWB-99410', dispatchedBy: 'Deepak Sharma', status: 'Dispatched' },
+  { id: 'OUT-SI-902', date: '2026-11-23', company: 'Sudhi Impex', sku: 'SI-FG-304', itemName: 'Processed Cashew Kernels Grade W-320', quantity: 4000, uom: 'KG', destination: 'EuroFoods GmbH (Rotterdam Port)', referenceNo: 'EXP/SI/26-27/109 • E-BRC-881', dispatchedBy: 'Meera Nair', status: 'Port Gate-In' },
+  { id: 'OUT-SE-903', date: '2026-11-24', company: 'Swati Enterprise', sku: 'SE-IND-401', itemName: 'SS-304 Seamless Pipes 2-Inch Sch 40', quantity: 400, uom: 'Meters', destination: 'Larsen & Toubro EPC Site (Hazira)', referenceNo: 'GST/SE/26-27/610 • EWB-5519', dispatchedBy: 'Vikram Patel', status: 'In Transit' },
+  { id: 'OUT-VL-904', date: '2026-11-22', company: 'Vilaano', sku: 'VL-FTW-804', itemName: 'Italian Calfskin Chelsea Boots (Cognac)', quantity: 60, uom: 'Pairs', destination: 'Palladium Mall Boutique (Lower Parel)', referenceNo: 'STR-TRF-VL-404', dispatchedBy: 'Ananya Deshmukh', status: 'Delivered' },
+  { id: 'OUT-SP-905', date: '2026-11-21', company: 'Siona Plasto', sku: 'SP-FG-209', itemName: '20L Chemical Jerrycan UN-Certified', quantity: 400, uom: 'Units', destination: 'Asian Paints Ankleshwar Ancillary Unit', referenceNo: 'GST/SP/26-27/815', dispatchedBy: 'Suresh Iyer', status: 'Delivered' },
+];
+
 export default function App() {
   const [selectedCompany, setSelectedCompany] = useState('All');
   const [activeNav, setActiveNav] = useState('Dashboard');
@@ -726,6 +774,34 @@ export default function App() {
   });
   const [rightsMatrix, setRightsMatrix] = useState(INITIAL_RIGHTS_MATRIX);
   const [inventorySearch, setInventorySearch] = useState('');
+  const [inventoryTab, setInventoryTab] = useState('StockList'); // 'StockList' | 'StockIn' | 'StockOut'
+  const [inventoryCompanyFilter, setInventoryCompanyFilter] = useState('All');
+  const [stockItems, setStockItems] = useState(INITIAL_STOCK_LIST);
+  const [stockInRecords, setStockInRecords] = useState(INITIAL_STOCK_IN);
+  const [stockOutRecords, setStockOutRecords] = useState(INITIAL_STOCK_OUT);
+
+  // Stock In Modal State
+  const [isStockInModalOpen, setIsStockInModalOpen] = useState(false);
+  const [newStockIn, setNewStockIn] = useState({
+    company: 'Siona Plasto',
+    sku: 'SP-RM-101',
+    quantity: 1000,
+    supplier: '',
+    referenceNo: '',
+    location: '',
+    receivedBy: 'Deepak Sharma',
+  });
+
+  // Stock Out Modal State
+  const [isStockOutModalOpen, setIsStockOutModalOpen] = useState(false);
+  const [newStockOut, setNewStockOut] = useState({
+    company: 'Siona Plasto',
+    sku: 'SP-FG-205',
+    quantity: 200,
+    destination: '',
+    referenceNo: '',
+    dispatchedBy: 'Deepak Sharma',
+  });
 
   // Task creation state with rich fields
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -1128,6 +1204,108 @@ export default function App() {
       modules: ['Inventory', 'Production'],
     });
     triggerToast(`Created role ${createdRole.name}`);
+  };
+
+  // --- Inventory Handlers for Stock In & Stock Out ---
+  const handleRecordStockIn = (e) => {
+    e.preventDefault();
+    const qty = Number(newStockIn.quantity);
+    if (!qty || qty <= 0) {
+      triggerToast('Please enter a valid positive quantity');
+      return;
+    }
+    const matchedItem = stockItems.find((item) => item.sku === newStockIn.sku);
+    const itemName = matchedItem ? matchedItem.name : 'Stock Item';
+    const uom = matchedItem ? matchedItem.uom : 'Units';
+
+    const inwardRecord = {
+      id: `INW-${Date.now().toString().slice(-5)}`,
+      date: new Date().toISOString().split('T')[0],
+      company: newStockIn.company,
+      sku: newStockIn.sku,
+      itemName: itemName,
+      quantity: qty,
+      uom: uom,
+      supplier: newStockIn.supplier || 'Standard Vendor Receipt',
+      referenceNo: newStockIn.referenceNo || `GRN-${Date.now().toString().slice(-4)}`,
+      location: newStockIn.location || (matchedItem ? matchedItem.location : 'Main Warehouse'),
+      receivedBy: newStockIn.receivedBy,
+      status: 'QC Approved & Stored',
+    };
+
+    // Update stockInRecords
+    setStockInRecords([inwardRecord, ...stockInRecords]);
+
+    // Increment quantity in stockItems
+    setStockItems((prev) =>
+      prev.map((item) => {
+        if (item.sku === newStockIn.sku) {
+          const newStockQty = item.stock + qty;
+          return {
+            ...item,
+            stock: newStockQty,
+            status: newStockQty <= item.minStock ? 'Low Stock' : 'Optimal',
+          };
+        }
+        return item;
+      })
+    );
+
+    setIsStockInModalOpen(false);
+    triggerToast(`Stock In: +${qty} ${uom} added to ${itemName}`);
+  };
+
+  const handleRecordStockOut = (e) => {
+    e.preventDefault();
+    const qty = Number(newStockOut.quantity);
+    if (!qty || qty <= 0) {
+      triggerToast('Please enter a valid positive quantity');
+      return;
+    }
+    const matchedItem = stockItems.find((item) => item.sku === newStockOut.sku);
+    if (!matchedItem) {
+      triggerToast('Selected item not found');
+      return;
+    }
+    if (matchedItem.stock < qty) {
+      triggerToast(`Cannot dispatch ${qty} ${matchedItem.uom}. Only ${matchedItem.stock} ${matchedItem.uom} available in stock!`);
+      return;
+    }
+
+    const outwardRecord = {
+      id: `OUT-${Date.now().toString().slice(-5)}`,
+      date: new Date().toISOString().split('T')[0],
+      company: newStockOut.company,
+      sku: newStockOut.sku,
+      itemName: matchedItem.name,
+      quantity: qty,
+      uom: matchedItem.uom,
+      destination: newStockOut.destination || 'Customer Dispatch Delivery',
+      referenceNo: newStockOut.referenceNo || `DC-${Date.now().toString().slice(-4)}`,
+      dispatchedBy: newStockOut.dispatchedBy,
+      status: 'Dispatched',
+    };
+
+    // Update stockOutRecords
+    setStockOutRecords([outwardRecord, ...stockOutRecords]);
+
+    // Decrement quantity in stockItems
+    setStockItems((prev) =>
+      prev.map((item) => {
+        if (item.sku === newStockOut.sku) {
+          const newStockQty = item.stock - qty;
+          return {
+            ...item,
+            stock: newStockQty,
+            status: newStockQty <= item.minStock ? 'Low Stock' : 'Optimal',
+          };
+        }
+        return item;
+      })
+    );
+
+    setIsStockOutModalOpen(false);
+    triggerToast(`Stock Out: -${qty} ${matchedItem.uom} dispatched from ${matchedItem.name}`);
   };
 
   const handleToggleRight = (roleName, modId) => {
@@ -1889,92 +2067,747 @@ export default function App() {
           )}
 
           {/* =========================================================================
-              VIEW 3: INVENTORY & QR STOCK
+              VIEW 3: MULTI-COMPANY INVENTORY (Stock List, Stock In, Stock Out)
+              For Siona Plasto, Sudhi Impex, Swati Enterprise, Vilaano
              ========================================================================= */}
-          {activeNav === 'Inventory' && activeCompanyOps && (
+          {activeNav === 'Inventory' && (
             <div className="space-y-4 animate-fade-in">
-              <div className="flex items-center justify-between">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">
-                    {currentCompanyObj.name} — Inventory & QR Tags
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Live raw material stock, finished goods and batch QR tracking
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      Multi-Company Inventory Hub
+                    </h2>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      Stock In • Stock Out • Stock List
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Real-time stock ledger, inward GRN/purchases (Stock In), and outward dispatches (Stock Out) for Siona Plasto, Sudhi Impex, Swati Enterprise & Vilaano.
                   </p>
                 </div>
-                <button
-                  onClick={() => setActiveNav('Workspaces')}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                >
-                  ← Back to Workspaces
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const comp = inventoryCompanyFilter !== 'All' ? inventoryCompanyFilter : (selectedCompany !== 'All' ? selectedCompany : 'Siona Plasto');
+                      const itemsInComp = stockItems.filter(i => i.company === comp);
+                      setNewStockIn({
+                        company: comp,
+                        sku: itemsInComp[0]?.sku || stockItems[0]?.sku,
+                        quantity: 1000,
+                        supplier: '',
+                        referenceNo: '',
+                        location: '',
+                        receivedBy: 'Deepak Sharma',
+                      });
+                      setIsStockInModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Record Stock In</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const comp = inventoryCompanyFilter !== 'All' ? inventoryCompanyFilter : (selectedCompany !== 'All' ? selectedCompany : 'Siona Plasto');
+                      const itemsInComp = stockItems.filter(i => i.company === comp);
+                      setNewStockOut({
+                        company: comp,
+                        sku: itemsInComp[0]?.sku || stockItems[0]?.sku,
+                        quantity: 100,
+                        destination: '',
+                        referenceNo: '',
+                        dispatchedBy: 'Deepak Sharma',
+                      });
+                      setIsStockOutModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+                  >
+                    <Truck className="w-3.5 h-3.5" />
+                    <span>+ Record Stock Out</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                <div className="p-3 border-b border-slate-100 flex items-center justify-between">
-                  <div className="relative w-64">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              {/* KPI Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total SKUs Tracked</span>
+                  <div className="text-xl font-bold text-slate-900 mt-0.5">
+                    {inventoryCompanyFilter === 'All' ? stockItems.length : stockItems.filter(i => i.company === inventoryCompanyFilter).length} Items
+                  </div>
+                </div>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Stock In Entries</span>
+                  <div className="text-xl font-bold text-emerald-600 mt-0.5">
+                    {inventoryCompanyFilter === 'All' ? stockInRecords.length : stockInRecords.filter(r => r.company === inventoryCompanyFilter).length} Inwards
+                  </div>
+                </div>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">Stock Out Entries</span>
+                  <div className="text-xl font-bold text-blue-600 mt-0.5">
+                    {inventoryCompanyFilter === 'All' ? stockOutRecords.length : stockOutRecords.filter(r => r.company === inventoryCompanyFilter).length} Outwards
+                  </div>
+                </div>
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Low Stock Alerts</span>
+                  <div className="text-xl font-bold text-amber-600 mt-0.5">
+                    {stockItems.filter(i => (inventoryCompanyFilter === 'All' || i.company === inventoryCompanyFilter) && i.status === 'Low Stock').length} Critical
+                  </div>
+                </div>
+              </div>
+
+              {/* Company Filter Pills & Tabs Bar */}
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+                {/* Company Filter Pills (Siona Plasto, Sudhi Impex, Swati Enterprise, Vilaano) */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1.5">
+                    Company:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setInventoryCompanyFilter('All')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      inventoryCompanyFilter === 'All'
+                        ? 'bg-slate-900 text-white shadow-2xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                    }`}
+                  >
+                    All Companies ({stockItems.length})
+                  </button>
+                  {COMPANIES.filter((c) => c.id !== 'All').map((c) => {
+                    const count = stockItems.filter((i) => i.company === c.id).length;
+                    const isSelected = inventoryCompanyFilter === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setInventoryCompanyFilter(c.id)}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white shadow-2xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : getCompanyDotColor(c.id)}`} />
+                        <span>{c.name}</span>
+                        <span className={`text-[10px] px-1 py-0.2 rounded font-bold ${isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-200/80 text-slate-600'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Sub-Tabs: Stock List, Stock In, Stock Out + Search */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100">
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setInventoryTab('StockList')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        inventoryTab === 'StockList'
+                          ? 'bg-white text-slate-900 shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      📦 Stock List ({stockItems.filter(i => inventoryCompanyFilter === 'All' || i.company === inventoryCompanyFilter).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInventoryTab('StockIn')}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        inventoryTab === 'StockIn'
+                          ? 'bg-emerald-600 text-white shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>📥 Stock In</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${inventoryTab === 'StockIn' ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        {stockInRecords.filter(r => inventoryCompanyFilter === 'All' || r.company === inventoryCompanyFilter).length}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInventoryTab('StockOut')}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        inventoryTab === 'StockOut'
+                          ? 'bg-blue-600 text-white shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>📤 Stock Out</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${inventoryTab === 'StockOut' ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        {stockOutRecords.filter(r => inventoryCompanyFilter === 'All' || r.company === inventoryCompanyFilter).length}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      placeholder="Filter SKU or item..."
+                      placeholder="Search SKU, item, partner, ref..."
                       value={inventorySearch}
                       onChange={(e) => setInventorySearch(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 rounded-lg border border-slate-200 focus:outline-none"
+                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
-                  <span className="text-xs font-bold text-slate-900">
-                    Valuation: {activeCompanyOps.metrics.inventoryValue}
-                  </span>
                 </div>
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                    <tr>
-                      <th className="py-3 px-4">SKU Code</th>
-                      <th className="py-3 px-4">Item Name</th>
-                      <th className="py-3 px-4">Category</th>
-                      <th className="py-3 px-4">Current Stock</th>
-                      <th className="py-3 px-4">QR Batch Tag</th>
-                      <th className="py-3 px-4">Threshold</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {activeCompanyOps.inventory
-                      .filter(
-                        (i) =>
-                          i.name.toLowerCase().includes(inventorySearch.toLowerCase()) ||
-                          i.sku.toLowerCase().includes(inventorySearch.toLowerCase())
-                      )
-                      .map((item) => (
-                        <tr key={item.sku} className="hover:bg-slate-50/70">
-                          <td className="py-3 px-4 font-mono font-bold text-slate-900">{item.sku}</td>
-                          <td className="py-3 px-4 font-semibold text-slate-800">{item.name}</td>
-                          <td className="py-3 px-4 text-slate-500">{item.category}</td>
-                          <td className="py-3 px-4 font-bold text-slate-900">{item.stock}</td>
-                          <td className="py-3 px-4">
-                            <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded text-slate-700">
-                              <QrCode className="w-3 h-3 text-slate-500" />
-                              {item.qrTag}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                item.status === 'Optimal'
-                                  ? 'bg-emerald-50 text-emerald-700'
-                                  : 'bg-amber-50 text-amber-700'
-                              }`}
-                            >
-                              {item.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
               </div>
+
+              {/* =========================================================================
+                  SUB-VIEW 1: STOCK LIST (Real-time current stock balances)
+                 ========================================================================= */}
+              {inventoryTab === 'StockList' && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="py-3 px-3">SKU Code</th>
+                        <th className="py-3 px-3 min-w-[200px]">Item Name & Category</th>
+                        <th className="py-3 px-3">Company</th>
+                        <th className="py-3 px-3">Warehouse Location</th>
+                        <th className="py-3 px-3">Current Stock</th>
+                        <th className="py-3 px-3">Unit Valuation</th>
+                        <th className="py-3 px-3">QR Batch Tag</th>
+                        <th className="py-3 px-3">Stock Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {stockItems
+                        .filter((item) => {
+                          const matchesCompany = inventoryCompanyFilter === 'All' || item.company === inventoryCompanyFilter;
+                          const s = inventorySearch.toLowerCase();
+                          const matchesSearch =
+                            inventorySearch === '' ||
+                            item.name.toLowerCase().includes(s) ||
+                            item.sku.toLowerCase().includes(s) ||
+                            item.category.toLowerCase().includes(s) ||
+                            item.location.toLowerCase().includes(s);
+                          return matchesCompany && matchesSearch;
+                        })
+                        .map((item) => (
+                          <tr key={item.sku} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-3 px-3 font-mono font-bold text-slate-900 whitespace-nowrap">
+                              {item.sku}
+                            </td>
+                            <td className="py-3 px-3">
+                              <div className="font-semibold text-slate-900">{item.name}</div>
+                              <div className="text-[11px] text-slate-500">{item.category}</div>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(item.company)}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(item.company)}`} />
+                                {item.company}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-slate-600 font-medium whitespace-nowrap">
+                              {item.location}
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <div className="text-sm font-bold text-slate-900">
+                                {item.stock.toLocaleString()} <span className="text-xs text-slate-500 font-normal">{item.uom}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-400">
+                                Min: {item.minStock.toLocaleString()} {item.uom}
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <div className="font-bold text-slate-800">₹{(item.stock * item.unitPrice).toLocaleString()}</div>
+                              <div className="text-[10px] text-slate-500">₹{item.unitPrice}/{item.uom}</div>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded text-slate-700 border border-slate-200">
+                                <QrCode className="w-3 h-3 text-slate-500" />
+                                {item.qrTag}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  item.status === 'Optimal'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+                                }`}
+                              >
+                                {item.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* =========================================================================
+                  SUB-VIEW 2: STOCK IN (Inward Movements, Purchases, GRN)
+                 ========================================================================= */}
+              {inventoryTab === 'StockIn' && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                  <div className="p-3 bg-emerald-50/40 border-b border-emerald-100 flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-900 flex items-center gap-1.5">
+                      <span>📥 Inward Stock Receipts (GRN / Purchases / Incoming Challans)</span>
+                    </span>
+                    <span className="text-[11px] text-emerald-700 font-medium">
+                      All inward transactions directly increase item stock balances
+                    </span>
+                  </div>
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="py-3 px-3">Inward ID</th>
+                        <th className="py-3 px-3">Date</th>
+                        <th className="py-3 px-3 min-w-[180px]">Item & SKU</th>
+                        <th className="py-3 px-3">Company</th>
+                        <th className="py-3 px-3">Quantity Received</th>
+                        <th className="py-3 px-3">Supplier / Vendor</th>
+                        <th className="py-3 px-3">PO / Challan Ref</th>
+                        <th className="py-3 px-3">Received By</th>
+                        <th className="py-3 px-3">QC Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {stockInRecords
+                        .filter((r) => {
+                          const matchesCompany = inventoryCompanyFilter === 'All' || r.company === inventoryCompanyFilter;
+                          const s = inventorySearch.toLowerCase();
+                          const matchesSearch =
+                            inventorySearch === '' ||
+                            r.itemName.toLowerCase().includes(s) ||
+                            r.sku.toLowerCase().includes(s) ||
+                            r.supplier.toLowerCase().includes(s) ||
+                            r.referenceNo.toLowerCase().includes(s);
+                          return matchesCompany && matchesSearch;
+                        })
+                        .map((r) => (
+                          <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-3 px-3 font-mono font-bold text-emerald-700 whitespace-nowrap">
+                              {r.id}
+                            </td>
+                            <td className="py-3 px-3 text-slate-600 whitespace-nowrap">{r.date}</td>
+                            <td className="py-3 px-3">
+                              <div className="font-semibold text-slate-900">{r.itemName}</div>
+                              <div className="text-[10px] font-mono text-slate-400">{r.sku}</div>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(r.company)}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(r.company)}`} />
+                                {r.company}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                +{r.quantity.toLocaleString()} {r.uom}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-slate-700 font-medium">{r.supplier}</td>
+                            <td className="py-3 px-3 font-mono text-slate-600 text-[11px] whitespace-nowrap">{r.referenceNo}</td>
+                            <td className="py-3 px-3 text-slate-600 whitespace-nowrap">{r.receivedBy}</td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                {r.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* =========================================================================
+                  SUB-VIEW 3: STOCK OUT (Outward Movements, Dispatches, Challans)
+                 ========================================================================= */}
+              {inventoryTab === 'StockOut' && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                  <div className="p-3 bg-blue-50/40 border-b border-blue-100 flex items-center justify-between text-xs">
+                    <span className="font-bold text-blue-900 flex items-center gap-1.5">
+                      <span>📤 Outward Stock Dispatches (Sales / Delivery Challans / Transfers)</span>
+                    </span>
+                    <span className="text-[11px] text-blue-700 font-medium">
+                      All dispatch transactions automatically deduct quantity from current stock
+                    </span>
+                  </div>
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                      <tr>
+                        <th className="py-3 px-3">Outward ID</th>
+                        <th className="py-3 px-3">Date</th>
+                        <th className="py-3 px-3 min-w-[180px]">Item & SKU</th>
+                        <th className="py-3 px-3">Company</th>
+                        <th className="py-3 px-3">Quantity Dispatched</th>
+                        <th className="py-3 px-3">Customer / Destination</th>
+                        <th className="py-3 px-3">Delivery Challan / Invoice</th>
+                        <th className="py-3 px-3">Dispatched By</th>
+                        <th className="py-3 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {stockOutRecords
+                        .filter((r) => {
+                          const matchesCompany = inventoryCompanyFilter === 'All' || r.company === inventoryCompanyFilter;
+                          const s = inventorySearch.toLowerCase();
+                          const matchesSearch =
+                            inventorySearch === '' ||
+                            r.itemName.toLowerCase().includes(s) ||
+                            r.sku.toLowerCase().includes(s) ||
+                            r.destination.toLowerCase().includes(s) ||
+                            r.referenceNo.toLowerCase().includes(s);
+                          return matchesCompany && matchesSearch;
+                        })
+                        .map((r) => (
+                          <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-3 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">
+                              {r.id}
+                            </td>
+                            <td className="py-3 px-3 text-slate-600 whitespace-nowrap">{r.date}</td>
+                            <td className="py-3 px-3">
+                              <div className="font-semibold text-slate-900">{r.itemName}</div>
+                              <div className="text-[10px] font-mono text-slate-400">{r.sku}</div>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(r.company)}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(r.company)}`} />
+                                {r.company}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                                -{r.quantity.toLocaleString()} {r.uom}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-slate-700 font-medium">{r.destination}</td>
+                            <td className="py-3 px-3 font-mono text-slate-600 text-[11px] whitespace-nowrap">{r.referenceNo}</td>
+                            <td className="py-3 px-3 text-slate-600 whitespace-nowrap">{r.dispatchedBy}</td>
+                            <td className="py-3 px-3 whitespace-nowrap">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                                {r.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* =========================================================================
+                  MODAL: RECORD STOCK IN (INWARD RECEIPT)
+                 ========================================================================= */}
+              {isStockInModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
+                  <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/50">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">Record Inward Stock (Stock In)</h3>
+                        <p className="text-[11px] text-slate-500">Log GRN, supplier purchases and incoming challans</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsStockInModalOpen(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleRecordStockIn} className="p-5 space-y-3.5 text-xs">
+                      {/* Company Selector */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">Company *</label>
+                        <select
+                          value={newStockIn.company}
+                          onChange={(e) => {
+                            const comp = e.target.value;
+                            const compItems = stockItems.filter(i => i.company === comp);
+                            setNewStockIn({
+                              ...newStockIn,
+                              company: comp,
+                              sku: compItems[0]?.sku || '',
+                            });
+                          }}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                        >
+                          {COMPANIES.filter(c => c.id !== 'All').map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Item Selector */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">Select Item / SKU *</label>
+                        <select
+                          value={newStockIn.sku}
+                          onChange={(e) => setNewStockIn({ ...newStockIn, sku: e.target.value })}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                          required
+                        >
+                          {stockItems
+                            .filter(i => i.company === newStockIn.company)
+                            .map(i => (
+                              <option key={i.sku} value={i.sku}>
+                                {i.sku} — {i.name} ({i.stock} {i.uom} in stock)
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      {/* Quantity & Unit */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">Inward Quantity *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={newStockIn.quantity}
+                            onChange={(e) => setNewStockIn({ ...newStockIn, quantity: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">UOM</label>
+                          <input
+                            type="text"
+                            disabled
+                            value={stockItems.find(i => i.sku === newStockIn.sku)?.uom || 'Units'}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Supplier & Reference */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">Supplier / Vendor *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Reliance Petrochemicals"
+                            value={newStockIn.supplier}
+                            onChange={(e) => setNewStockIn({ ...newStockIn, supplier: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">PO / Invoice / Challan Ref *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. PO-8841 / INV-991"
+                            value={newStockIn.referenceNo}
+                            onChange={(e) => setNewStockIn({ ...newStockIn, referenceNo: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Location & Received By */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">Warehouse Location</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Vapi Plant - Silo 2"
+                            value={newStockIn.location}
+                            onChange={(e) => setNewStockIn({ ...newStockIn, location: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">Received By</label>
+                          <select
+                            value={newStockIn.receivedBy}
+                            onChange={(e) => setNewStockIn({ ...newStockIn, receivedBy: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                          >
+                            {STAFF_MEMBERS.map(staff => (
+                              <option key={staff} value={staff}>{staff}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setIsStockInModalOpen(false)}
+                          className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-semibold text-xs hover:bg-slate-50 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs cursor-pointer shadow-2xs"
+                        >
+                          Save Stock In (+Add Stock)
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* =========================================================================
+                  MODAL: RECORD STOCK OUT (OUTWARD DISPATCH)
+                 ========================================================================= */}
+              {isStockOutModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
+                  <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/50">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">Record Outward Stock (Stock Out)</h3>
+                        <p className="text-[11px] text-slate-500">Log customer dispatches, jobwork outwards & transfers</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsStockOutModalOpen(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleRecordStockOut} className="p-5 space-y-3.5 text-xs">
+                      {/* Company Selector */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">Company *</label>
+                        <select
+                          value={newStockOut.company}
+                          onChange={(e) => {
+                            const comp = e.target.value;
+                            const compItems = stockItems.filter(i => i.company === comp);
+                            setNewStockOut({
+                              ...newStockOut,
+                              company: comp,
+                              sku: compItems[0]?.sku || '',
+                            });
+                          }}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                        >
+                          {COMPANIES.filter(c => c.id !== 'All').map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Item Selector with Available Stock Display */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-bold text-slate-700">Select Item / SKU *</label>
+                          <span className="text-[10px] text-indigo-600 font-bold">
+                            Available: {stockItems.find(i => i.sku === newStockOut.sku)?.stock.toLocaleString()} {stockItems.find(i => i.sku === newStockOut.sku)?.uom}
+                          </span>
+                        </div>
+                        <select
+                          value={newStockOut.sku}
+                          onChange={(e) => setNewStockOut({ ...newStockOut, sku: e.target.value })}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                          required
+                        >
+                          {stockItems
+                            .filter(i => i.company === newStockOut.company)
+                            .map(i => (
+                              <option key={i.sku} value={i.sku}>
+                                {i.sku} — {i.name} (Stock: {i.stock} {i.uom})
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      {/* Quantity & Unit */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">Dispatch Quantity *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max={stockItems.find(i => i.sku === newStockOut.sku)?.stock || 999999}
+                            value={newStockOut.quantity}
+                            onChange={(e) => setNewStockOut({ ...newStockOut, quantity: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">UOM</label>
+                          <input
+                            type="text"
+                            disabled
+                            value={stockItems.find(i => i.sku === newStockOut.sku)?.uom || 'Units'}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Customer / Destination & Delivery Challan */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">Customer / Destination *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Amul Dairy Packaging Div."
+                            value={newStockOut.destination}
+                            onChange={(e) => setNewStockOut({ ...newStockOut, destination: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700">Delivery Challan / Invoice Ref *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. GST/SP/26-27/812"
+                            value={newStockOut.referenceNo}
+                            onChange={(e) => setNewStockOut({ ...newStockOut, referenceNo: e.target.value })}
+                            className="w-full p-2 border border-slate-200 rounded-lg"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Dispatched By */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-slate-700">Dispatched By</label>
+                        <select
+                          value={newStockOut.dispatchedBy}
+                          onChange={(e) => setNewStockOut({ ...newStockOut, dispatchedBy: e.target.value })}
+                          className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                        >
+                          {STAFF_MEMBERS.map(staff => (
+                            <option key={staff} value={staff}>{staff}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setIsStockOutModalOpen(false)}
+                          className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-semibold text-xs hover:bg-slate-50 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs cursor-pointer shadow-2xs"
+                        >
+                          Dispatch Stock Out (-Deduct Stock)
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-
           {/* =========================================================================
               VIEW 4: ACCOUNTS & GST
              ========================================================================= */}
