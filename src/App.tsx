@@ -1116,7 +1116,7 @@ export default function App() {
   const [selectedStockCodes, setSelectedStockCodes] = useState<string[]>([]);
   const [selectedQrItem, setSelectedQrItem] = useState<any>(null);
   const [qrCopies, setQrCopies] = useState<number>(1);
-  const [recordStockInOnPrint, setRecordStockInOnPrint] = useState<boolean>(true);
+  const [recordStockInOnPrint, setRecordStockInOnPrint] = useState<boolean>(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   // Dropdown filter states for Full Stock List (Image 3)
@@ -2958,7 +2958,7 @@ export default function App() {
                                         onClick={() => {
                                           setSelectedQrItem(item);
                                           setQrCopies(1);
-                                          setRecordStockInOnPrint(true);
+                                          setRecordStockInOnPrint(false);
                                         }}
                                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors cursor-pointer"
                                       >
@@ -3482,14 +3482,18 @@ export default function App() {
                           </span>
                         </div>
 
-                        {/* Action Row matching Image 2: Checkbox + Emerald Button */}
+                        {/* Action Row: Checkbox controls whether button prints only or prints & records Stock IN */}
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                          <label className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-800 text-xs font-semibold cursor-pointer select-none">
+                          <label className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-semibold cursor-pointer select-none transition-colors ${
+                            recordStockInOnPrint
+                              ? 'border-emerald-200 bg-emerald-50/80 text-emerald-800'
+                              : 'border-slate-200 bg-slate-50 hover:bg-slate-100/70 text-slate-700'
+                          }`}>
                             <input
                               type="checkbox"
                               checked={recordStockInOnPrint}
                               onChange={(e) => setRecordStockInOnPrint(e.target.checked)}
-                              className="w-4 h-4 text-emerald-600 rounded border-emerald-300 focus:ring-emerald-500"
+                              className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
                             />
                             <span>
                               Record as Stock IN (+{qrCopies} {selectedQrItem.unit || selectedQrItem.uom || 'PAC'} on print)
@@ -3499,10 +3503,18 @@ export default function App() {
                           <button
                             type="button"
                             onClick={handlePrintAndAddStockIn}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                            className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow-sm transition-all cursor-pointer ${
+                              recordStockInOnPrint
+                                ? 'bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20'
+                                : 'bg-slate-900 hover:bg-slate-800'
+                            }`}
                           >
                             <Printer className="w-4 h-4" />
-                            <span>Print &amp; Add to Stock IN (+{qrCopies})</span>
+                            <span>
+                              {recordStockInOnPrint
+                                ? `Print & Add to Stock IN (+${qrCopies})`
+                                : 'Print'}
+                            </span>
                           </button>
                         </div>
 
