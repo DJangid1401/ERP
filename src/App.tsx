@@ -71,7 +71,9 @@ import {
   ArrowDown,
   Scale,
   PlusCircle,
-  Camera
+  Camera,
+  User,
+  MinusCircle
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -746,6 +748,25 @@ const INITIAL_STOCK_LIST = [
     status: 'Optimal',
   },
   {
+    sku: 'PRD-0080',
+    uniqueCode: 'PRD-0080',
+    name: 'TYRE',
+    size: '4 MM TYRE',
+    color: 'P.CREAM',
+    colorHex: '#fef3c7',
+    price: 1200,
+    unitPrice: 1200,
+    stock: 0,
+    unit: 'KGS',
+    uom: 'KGS',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay A',
+    minStock: 5,
+    qrTag: 'QR-PRD-0080',
+    status: 'Low Stock',
+  },
+  {
     sku: 'PRD-0020',
     uniqueCode: 'PRD-0020',
     name: 'TYRE',
@@ -1167,16 +1188,40 @@ export default function App() {
   const [scannerError, setScannerError] = useState<string | null>(null);
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
-  // Stock Out Modal State
+  // Stock Out (Outward Dispatch) Modal State — Matching User Screenshots Image 1 (PAC) & Image 2 (KGS)
   const [isStockOutModalOpen, setIsStockOutModalOpen] = useState(false);
-  const [newStockOut, setNewStockOut] = useState({
-    company: 'Siona Plasto',
-    sku: 'SP-FG-205',
-    quantity: 200,
-    destination: '',
-    referenceNo: '',
-    dispatchedBy: 'Deepak Sharma',
-  });
+  const [stockOutProductCode, setStockOutProductCode] = useState('PRD-0013');
+  const [stockOutCustomerName, setStockOutCustomerName] = useState('Shree Ganesh Traders');
+  const [stockOutDispatchMode, setStockOutDispatchMode] = useState<'packets' | 'direct'>('packets');
+  const [stockOutPacQty, setStockOutPacQty] = useState<number>(1);
+  const [stockOutPackets, setStockOutPackets] = useState<number>(1);
+  const [stockOutDirectWeight, setStockOutDirectWeight] = useState<number>(1);
+  const [stockOutUnitPrice, setStockOutUnitPrice] = useState<number>(140);
+  const [stockOutSearchOpen, setStockOutSearchOpen] = useState(false);
+
+  const currentStockOutItem = useMemo(() => {
+    return (
+      stockItems.find(
+        (i) =>
+          i.uniqueCode?.toLowerCase() === stockOutProductCode.trim().toLowerCase() ||
+          i.sku?.toLowerCase() === stockOutProductCode.trim().toLowerCase()
+      ) ||
+      stockItems.find((i) => i.uniqueCode === 'PRD-0013') ||
+      stockItems[0]
+    );
+  }, [stockItems, stockOutProductCode]);
+
+  const isOutItemKg = useMemo(() => {
+    if (!currentStockOutItem) return false;
+    const u = (currentStockOutItem.unit || currentStockOutItem.uom || '').toUpperCase();
+    return u === 'KG' || u === 'KGS' || u.startsWith('KG');
+  }, [currentStockOutItem]);
+
+  useEffect(() => {
+    if (currentStockOutItem) {
+      setStockOutUnitPrice(currentStockOutItem.price || currentStockOutItem.unitPrice || 140);
+    }
+  }, [currentStockOutItem?.sku, currentStockOutItem?.uniqueCode]);
 
   // Task creation state with rich fields
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -1704,26 +1749,46 @@ export default function App() {
 
   const handleScanSuccess = (decodedText: string) => {
     stopAndCloseScanner();
+    let scannedCode = decodedText.trim();
+    let parsedData: any = null;
     try {
-      const data = JSON.parse(decodedText);
-      const code = data.uniqueCode || data.code || data.sku || '';
-      setInwardProductCode(code);
-      if (data.name) setInwardProductName(data.name);
-      if (data.size) setInwardSize(data.size);
-      if (data.color) setInwardColor(data.color);
-      if (data.unit) {
-        if (data.unit === 'KG' || data.unit === 'KGS') {
+      parsedData = JSON.parse(decodedText);
+      scannedCode = parsedData.uniqueCode || parsedData.code || parsedData.sku || scannedCode;
+    } catch {
+      // plain text
+    }
+
+    if (isStockOutModalOpen) {
+      setStockOutProductCode(scannedCode);
+      const matched = stockItems.find(
+        (item) => item.uniqueCode === scannedCode || item.sku === scannedCode
+      );
+      if (matched) {
+        setStockOutUnitPrice(matched.price || matched.unitPrice || 0);
+        triggerToast(`Matched for Stock Out: ${matched.name} (${scannedCode})!`);
+      } else {
+        triggerToast(`Scanned Code: ${scannedCode}`);
+      }
+      return;
+    }
+
+    // Default: Stock In
+    setInwardProductCode(scannedCode);
+    if (parsedData) {
+      if (parsedData.name) setInwardProductName(parsedData.name);
+      if (parsedData.size) setInwardSize(parsedData.size);
+      if (parsedData.color) setInwardColor(parsedData.color);
+      if (parsedData.unit) {
+        if (parsedData.unit === 'KG' || parsedData.unit === 'KGS') {
           setInwardBaseUnit('KGS (Kilograms — Supports Direct KG & 500g Packets)');
         } else {
-          setInwardBaseUnit(data.unit);
+          setInwardBaseUnit(parsedData.unit);
         }
       }
-      triggerToast(`QR Scanned: ${data.name || code}!`);
-    } catch {
-      const cleanText = decodedText.trim();
-      setInwardProductCode(cleanText);
+      triggerToast(`QR Scanned: ${parsedData.name || scannedCode}!`);
+    } else {
       const matched = stockItems.find(
-        (item) => item.uniqueCode === cleanText || item.sku === cleanText
+        (item) => item.uniqueCode === scannedCode || item.sku === scannedCode
       );
       if (matched) {
         setInwardProductName(matched.name);
@@ -1736,9 +1801,9 @@ export default function App() {
             setInwardBaseUnit(matched.unit || matched.uom);
           }
         }
-        triggerToast(`Matched: ${matched.name} (${cleanText})`);
+        triggerToast(`Matched: ${matched.name} (${scannedCode})`);
       } else {
-        triggerToast(`Scanned Code: ${cleanText}`);
+        triggerToast(`Scanned Code: ${scannedCode}`);
       }
     }
   };
@@ -1836,49 +1901,63 @@ export default function App() {
     triggerToast(`Stock IN: +${calculatedQty} ${uom} recorded for ${finalName}!`);
   };
 
-  const handleRecordStockOut = (e) => {
-    e.preventDefault();
-    const qty = Number(newStockOut.quantity);
-    if (!qty || qty <= 0) {
-      triggerToast('Please enter a valid positive quantity');
-      return;
-    }
-    const matchedItem = stockItems.find((item) => item.sku === newStockOut.sku);
+  const handleRecordStockOut = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const matchedItem = currentStockOutItem;
     if (!matchedItem) {
       triggerToast('Selected item not found');
       return;
     }
-    if (matchedItem.stock < qty) {
-      triggerToast(`Cannot dispatch ${qty} ${matchedItem.uom}. Only ${matchedItem.stock} ${matchedItem.uom} available in stock!`);
-      return;
+
+    const isKg = isOutItemKg;
+    let deductQty = 1;
+    let qtyDisplay = '';
+    let totalAmt = 0;
+
+    if (isKg) {
+      if (stockOutDispatchMode === 'packets') {
+        deductQty = Number((stockOutPackets * 0.5).toFixed(2));
+        qtyDisplay = `${deductQty} KGS (${stockOutPackets} Packet${stockOutPackets > 1 ? 's' : ''})`;
+        totalAmt = Math.round(stockOutPackets * 0.5 * (stockOutUnitPrice || 0));
+      } else {
+        deductQty = Number(stockOutDirectWeight) || 1;
+        qtyDisplay = `${deductQty} KGS`;
+        totalAmt = Math.round(stockOutDirectWeight * (stockOutUnitPrice || 0));
+      }
+    } else {
+      deductQty = Number(stockOutPacQty) || 1;
+      const uomLabel = matchedItem.unit || matchedItem.uom || 'PAC';
+      qtyDisplay = `${deductQty} ${uomLabel}`;
+      totalAmt = Math.round(deductQty * (stockOutUnitPrice || 0));
     }
 
     const outwardRecord = {
       id: `OUT-${Date.now().toString().slice(-5)}`,
       date: new Date().toISOString().split('T')[0],
-      company: newStockOut.company,
-      sku: newStockOut.sku,
+      company: matchedItem.company || (selectedCompany !== 'All' ? selectedCompany : 'Siona Plasto'),
+      sku: matchedItem.uniqueCode || matchedItem.sku,
       itemName: matchedItem.name,
-      quantity: qty,
-      uom: matchedItem.uom,
-      destination: newStockOut.destination || 'Customer Dispatch Delivery',
-      referenceNo: newStockOut.referenceNo || `DC-${Date.now().toString().slice(-4)}`,
-      dispatchedBy: newStockOut.dispatchedBy,
+      quantity: deductQty,
+      uom: isKg ? 'KGS' : (matchedItem.unit || matchedItem.uom || 'PAC'),
+      destination: stockOutCustomerName.trim() || 'Shree Ganesh Traders',
+      referenceNo: `DC-${Date.now().toString().slice(-4)}`,
+      dispatchedBy: 'Deepak Sharma',
       status: 'Dispatched',
     };
 
-    // Update stockOutRecords
-    setStockOutRecords([outwardRecord, ...stockOutRecords]);
+    setStockOutRecords((prev) => [outwardRecord, ...prev]);
 
-    // Decrement quantity in stockItems
     setStockItems((prev) =>
       prev.map((item) => {
-        if (item.sku === newStockOut.sku) {
-          const newStockQty = item.stock - qty;
+        if (
+          (item.uniqueCode && item.uniqueCode === (matchedItem.uniqueCode || matchedItem.sku)) ||
+          (item.sku && item.sku === (matchedItem.sku || matchedItem.uniqueCode))
+        ) {
+          const newStockQty = Math.max(0, Number((item.stock - deductQty).toFixed(2)));
           return {
             ...item,
             stock: newStockQty,
-            status: newStockQty <= item.minStock ? 'Low Stock' : 'Optimal',
+            status: newStockQty <= 0 ? 'Out of Stock' : newStockQty <= (item.minStock || 0) ? 'Low Stock' : 'Optimal',
           };
         }
         return item;
@@ -1886,7 +1965,7 @@ export default function App() {
     );
 
     setIsStockOutModalOpen(false);
-    triggerToast(`Stock Out: -${qty} ${matchedItem.uom} dispatched from ${matchedItem.name}`);
+    triggerToast(`Stock Out: -${qtyDisplay} • ₹${totalAmt} processed!`);
   };
 
   // Handle QR Label Print with Stock IN (Image 2)
@@ -2827,14 +2906,17 @@ export default function App() {
                       onClick={() => {
                         const targetComp = currentComp !== 'All' ? currentComp : 'Siona Plasto';
                         const itemsInComp = stockItems.filter(i => i.company === targetComp);
-                        setNewStockOut({
-                          company: targetComp,
-                          sku: itemsInComp[0]?.sku || stockItems[0]?.sku,
-                          quantity: 100,
-                          destination: '',
-                          referenceNo: '',
-                          dispatchedBy: 'Deepak Sharma',
-                        });
+                        const defaultItem = itemsInComp.find(i => i.uniqueCode === 'PRD-0013') || itemsInComp[0] || stockItems[0];
+                        if (defaultItem) {
+                          setStockOutProductCode(defaultItem.uniqueCode || defaultItem.sku);
+                          setStockOutUnitPrice(defaultItem.price || defaultItem.unitPrice || 140);
+                        }
+                        setStockOutCustomerName('Shree Ganesh Traders');
+                        setStockOutPacQty(1);
+                        setStockOutPackets(1);
+                        setStockOutDirectWeight(1);
+                        setStockOutDispatchMode('packets');
+                        setStockOutSearchOpen(false);
                         setIsStockOutModalOpen(true);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
@@ -3746,148 +3828,619 @@ export default function App() {
                 )}
 
                 {/* =========================================================================
-                    MODAL: RECORD STOCK OUT (OUTWARD DISPATCH)
+                    MODAL: RECORD STOCK OUT (OUTWARD DISPATCH) — Matching User Screenshots
+                    Image 1 (PAC Mode) & Image 2 (KGS Mode: 500g Packets vs Direct KGS)
                    ========================================================================= */}
                 {isStockOutModalOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-                      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/50">
-                        <div>
-                          <h3 className="text-sm font-bold text-slate-900">Record Outward Stock (Stock Out)</h3>
-                          <p className="text-[11px] text-slate-500">Log customer dispatches, jobwork outwards & transfers</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setIsStockOutModalOpen(false)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <form onSubmit={handleRecordStockOut} className="p-5 space-y-3.5 text-xs">
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-700">Company *</label>
-                          <select
-                            value={newStockOut.company}
-                            onChange={(e) => {
-                              const comp = e.target.value;
-                              const compItems = stockItems.filter(i => i.company === comp);
-                              setNewStockOut({
-                                ...newStockOut,
-                                company: comp,
-                                sku: compItems[0]?.sku || '',
-                              });
-                            }}
-                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+                    <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-auto animate-in fade-in zoom-in-95">
+                      {/* Top Red Scan Button & Header */}
+                      <div className="p-6 pb-2 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => setIsScannerOpen(true)}
+                            className="flex-1 py-3 px-4 rounded-xl bg-[#c5221f] hover:bg-[#b01e1b] active:scale-[0.99] text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-sm transition-all cursor-pointer"
                           >
-                            {COMPANIES.filter(c => c.id !== 'All').map(c => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[11px] font-bold text-slate-700">Select Item / SKU *</label>
-                            <span className="text-[10px] text-indigo-600 font-bold">
-                              Available: {stockItems.find(i => i.sku === newStockOut.sku)?.stock.toLocaleString()} {stockItems.find(i => i.sku === newStockOut.sku)?.uom}
-                            </span>
-                          </div>
-                          <select
-                            value={newStockOut.sku}
-                            onChange={(e) => setNewStockOut({ ...newStockOut, sku: e.target.value })}
-                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
-                            required
-                          >
-                            {stockItems
-                              .filter(i => i.company === newStockOut.company)
-                              .map(i => (
-                                <option key={i.sku} value={i.sku}>
-                                  {i.sku} — {i.name} (Stock: {i.stock} {i.uom})
-                                </option>
-                              ))}
-                          </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">Dispatch Quantity *</label>
-                            <input
-                              type="number"
-                              min="1"
-                              max={stockItems.find(i => i.sku === newStockOut.sku)?.stock || 999999}
-                              value={newStockOut.quantity}
-                              onChange={(e) => setNewStockOut({ ...newStockOut, quantity: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">UOM</label>
-                            <input
-                              type="text"
-                              disabled
-                              value={stockItems.find(i => i.sku === newStockOut.sku)?.uom || 'Units'}
-                              className="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 font-bold"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">Customer / Destination *</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. Amul Dairy / EuroFoods / L&T"
-                              value={newStockOut.destination}
-                              onChange={(e) => setNewStockOut({ ...newStockOut, destination: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">Delivery Challan / Invoice Ref *</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. GST/26-27/812 • EWB-991"
-                              value={newStockOut.referenceNo}
-                              onChange={(e) => setNewStockOut({ ...newStockOut, referenceNo: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg"
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-700">Dispatched By</label>
-                          <select
-                            value={newStockOut.dispatchedBy}
-                            onChange={(e) => setNewStockOut({ ...newStockOut, dispatchedBy: e.target.value })}
-                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
-                          >
-                            {STAFF_MEMBERS.map(staff => (
-                              <option key={staff} value={staff}>{staff}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                            <QrCode className="w-5 h-5" />
+                            <span>Scan QR / Barcode</span>
+                          </button>
                           <button
                             type="button"
                             onClick={() => setIsStockOutModalOpen(false)}
-                            className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-semibold text-xs hover:bg-slate-50 cursor-pointer"
+                            className="ml-3 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                           >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs cursor-pointer shadow-2xs"
-                          >
-                            Dispatch Stock Out (-Deduct Stock)
+                            <X className="w-5 h-5" />
                           </button>
                         </div>
-                      </form>
+
+                        {/* Centered Divider: DISPATCH DETAILS */}
+                        <div className="relative text-center my-2">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-200" />
+                          </div>
+                          <div className="relative inline-block bg-white px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            DISPATCH DETAILS
+                          </div>
+                        </div>
+
+                        {/* Product Summary Card (Matching Image 1 & Image 2) */}
+                        {currentStockOutItem && (
+                          <div className="p-3.5 rounded-2xl border border-blue-100/90 bg-[#f8faff] space-y-1.5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center">
+                                  <Package className="w-4 h-4" />
+                                </div>
+                                <span className="font-bold text-slate-900 text-sm">
+                                  {currentStockOutItem.name}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                                  currentStockOutItem.stock > 0
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                                }`}
+                              >
+                                Stock: {currentStockOutItem.stock}{' '}
+                                {isOutItemKg
+                                  ? 'KGS'
+                                  : currentStockOutItem.unit || currentStockOutItem.uom || 'PAC'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-0.5">
+                              <span className="text-slate-500 font-mono text-[11px]">
+                                Code :{' '}
+                                <strong className="text-slate-800 font-bold">
+                                  {currentStockOutItem.uniqueCode || currentStockOutItem.sku}
+                                </strong>
+                              </span>
+                              <div className="text-right">
+                                <span className="text-blue-600 font-semibold text-xs">
+                                  Selling Price: ₹
+                                  {currentStockOutItem.price || currentStockOutItem.unitPrice || stockOutUnitPrice} /{' '}
+                                  {isOutItemKg
+                                    ? 'KGS'
+                                    : currentStockOutItem.unit || currentStockOutItem.uom || 'PAC'}
+                                </span>
+                                {isOutItemKg && (
+                                  <div className="text-[10px] text-slate-500">
+                                    (
+                                    {Math.floor(
+                                      (currentStockOutItem.stock || 0) / 0.5
+                                    )}{' '}
+                                    packets of 500g available)
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="text-[11px] text-slate-500 font-medium flex items-center gap-3 pt-0.5">
+                              {currentStockOutItem.size && (
+                                <span>
+                                  Size:{' '}
+                                  <strong className="text-slate-700">
+                                    {currentStockOutItem.size}
+                                  </strong>
+                                </span>
+                              )}
+                              {currentStockOutItem.color && (
+                                <span>
+                                  Color:{' '}
+                                  <strong className="text-slate-700">
+                                    {currentStockOutItem.color}
+                                  </strong>
+                                </span>
+                              )}
+                              <span>
+                                Base Unit:{' '}
+                                <strong className="text-slate-700">
+                                  {isOutItemKg
+                                    ? 'KGS'
+                                    : currentStockOutItem.unit || currentStockOutItem.uom || 'PAC'}
+                                </strong>
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Modal Form Body */}
+                      <div className="px-6 pb-6 space-y-4 text-xs">
+                        {/* Customer Name * (Registered DB / Walk-in) */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700 block">
+                            Customer Name *{' '}
+                            <span className="text-slate-400 font-normal">
+                              (Registered DB / Walk-in)
+                            </span>
+                          </label>
+                          <div className="relative">
+                            <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              placeholder="Enter or select customer name (e.g. Shree Ganesh Traders)"
+                              value={stockOutCustomerName}
+                              onChange={(e) => setStockOutCustomerName(e.target.value)}
+                              className="w-full pl-10 pr-16 py-2.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-900 shadow-2xs"
+                              required
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                                EN
+                              </span>
+                              <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Unique Product Code * (Search by Code, Name, Size, or Color) */}
+                        <div className="space-y-1 relative">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Unique Product Code *{' '}
+                              <span className="text-slate-400 font-normal">
+                                (Search by Code, Name, Size, or Color)
+                              </span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setStockOutProductCode('');
+                                setStockOutSearchOpen(true);
+                              }}
+                              className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 cursor-pointer"
+                            >
+                              × Clear
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={stockOutProductCode}
+                              onFocus={() => setStockOutSearchOpen(true)}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setStockOutProductCode(val);
+                                setStockOutSearchOpen(true);
+                              }}
+                              placeholder="Search code (e.g. PRD-0013, PRD-0080)"
+                              className="w-full pl-10 pr-20 py-2.5 text-xs font-mono font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-900 shadow-2xs"
+                              required
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-slate-400">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                                EN
+                              </span>
+                              <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                              <button
+                                type="button"
+                                onClick={() => setStockOutSearchOpen(!stockOutSearchOpen)}
+                                className="p-0.5 hover:text-slate-700 cursor-pointer"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Search dropdown for stock items */}
+                          {stockOutSearchOpen && (
+                            <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto divide-y divide-slate-100">
+                              {stockItems
+                                .filter(
+                                  (item) =>
+                                    !stockOutProductCode ||
+                                    item.uniqueCode?.toLowerCase().includes(stockOutProductCode.toLowerCase()) ||
+                                    item.sku?.toLowerCase().includes(stockOutProductCode.toLowerCase()) ||
+                                    item.name?.toLowerCase().includes(stockOutProductCode.toLowerCase()) ||
+                                    item.size?.toLowerCase().includes(stockOutProductCode.toLowerCase()) ||
+                                    item.color?.toLowerCase().includes(stockOutProductCode.toLowerCase())
+                                )
+                                .map((item) => (
+                                  <button
+                                    key={item.sku}
+                                    type="button"
+                                    onClick={() => {
+                                      setStockOutProductCode(item.uniqueCode || item.sku);
+                                      setStockOutUnitPrice(item.price || item.unitPrice || 140);
+                                      setStockOutSearchOpen(false);
+                                    }}
+                                    className="w-full px-3.5 py-2 text-left hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer"
+                                  >
+                                    <div>
+                                      <div className="font-bold text-slate-800 text-xs">
+                                        {item.uniqueCode || item.sku} — {item.name}
+                                      </div>
+                                      <div className="text-[10px] text-slate-500">
+                                        {item.size} • {item.color} • {item.company}
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-[11px] font-bold text-emerald-600">
+                                        {item.stock} {item.unit || item.uom}
+                                      </span>
+                                      <div className="text-[10px] text-slate-400">
+                                        ₹{item.price || item.unitPrice}
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* CASE 1: KGS MODE (Image 2) */}
+                        {isOutItemKg && (
+                          <div className="space-y-4">
+                            {/* SELECT DISPATCH MODE */}
+                            <div className="p-3 rounded-2xl border border-slate-200/90 bg-slate-50/60 space-y-2">
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                SELECT DISPATCH MODE
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setStockOutDispatchMode('packets')}
+                                  className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                    stockOutDispatchMode === 'packets'
+                                      ? 'bg-[#c5221f] text-white shadow-xs'
+                                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                                  }`}
+                                >
+                                  <Package className="w-4 h-4" />
+                                  <span>500g Packets</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setStockOutDispatchMode('direct')}
+                                  className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                    stockOutDispatchMode === 'direct'
+                                      ? 'bg-[#c5221f] text-white shadow-xs'
+                                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                                  }`}
+                                >
+                                  <Scale className="w-4 h-4" />
+                                  <span>Direct KGS</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 500g Packets Stepper & Chips (Image 2) */}
+                            {stockOutDispatchMode === 'packets' && (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-[11px] font-bold text-slate-700 block">
+                                    Number of 500g Packets to Dispatch *
+                                  </label>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setStockOutPackets((prev) => Math.max(1, prev - 1))}
+                                      className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                    >
+                                      -
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={stockOutPackets}
+                                      onChange={(e) => setStockOutPackets(Math.max(1, parseInt(e.target.value) || 1))}
+                                      className="flex-1 h-10 text-center font-bold text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-2xs"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setStockOutPackets((prev) => prev + 1)}
+                                      className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Preset Chips (Image 2) */}
+                                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                  {[
+                                    { pkts: 1, label: '1 Pkt (0.5 kg)' },
+                                    { pkts: 2, label: '2 Pkts (1 kg)' },
+                                    { pkts: 3, label: '3 Pkts (1.5 kg)' },
+                                    { pkts: 5, label: '5 Pkts (2.5 kg)' },
+                                    { pkts: 10, label: '10 Pkts (5 kg)' },
+                                    { pkts: 11, label: '11 Pkts (5.5 kg)' },
+                                  ].map((p) => {
+                                    const isSelected = stockOutPackets === p.pkts;
+                                    return (
+                                      <button
+                                        key={p.pkts}
+                                        type="button"
+                                        onClick={() => setStockOutPackets(p.pkts)}
+                                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                                          isSelected
+                                            ? 'border border-rose-300 bg-rose-50 text-rose-600 shadow-2xs'
+                                            : 'border border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100'
+                                        }`}
+                                      >
+                                        {p.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Direct KGS Stepper & Chips */}
+                            {stockOutDispatchMode === 'direct' && (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-[11px] font-bold text-slate-700 block">
+                                    Weight in KGS to Dispatch (e.g. 5.5) *
+                                  </label>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setStockOutDirectWeight((prev) => Math.max(0.5, Number((prev - 0.5).toFixed(1))))}
+                                      className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                    >
+                                      -
+                                    </button>
+                                    <input
+                                      type="number"
+                                      step="0.1"
+                                      min="0.1"
+                                      value={stockOutDirectWeight}
+                                      onChange={(e) => setStockOutDirectWeight(Math.max(0.1, parseFloat(e.target.value) || 0))}
+                                      className="flex-1 h-10 text-center font-bold text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-2xs"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setStockOutDirectWeight((prev) => Number((prev + 0.5).toFixed(1)))}
+                                      className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                  {[0.5, 1, 2, 5, 10, 20].map((wt) => {
+                                    const isSelected = stockOutDirectWeight === wt;
+                                    return (
+                                      <button
+                                        key={wt}
+                                        type="button"
+                                        onClick={() => setStockOutDirectWeight(wt)}
+                                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                                          isSelected
+                                            ? 'border border-rose-300 bg-rose-50 text-rose-600 shadow-2xs'
+                                            : 'border border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100'
+                                        }`}
+                                      >
+                                        {wt} KG
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Selling Price per KGS Box (Image 2) */}
+                            <div className="p-3.5 rounded-2xl border border-blue-200/80 bg-[#f8fbff] space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-blue-900 uppercase flex items-center gap-1">
+                                  <IndianRupee className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>SELLING PRICE PER KGS (₹)</span>
+                                </span>
+                                <span className="bg-blue-600 text-white font-bold text-xs px-3 py-1 rounded-lg shadow-2xs">
+                                  Total: ₹
+                                  {Math.round(
+                                    (stockOutDispatchMode === 'packets'
+                                      ? stockOutPackets * 0.5
+                                      : stockOutDirectWeight) * stockOutUnitPrice
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
+                              <input
+                                type="number"
+                                value={stockOutUnitPrice}
+                                onChange={(e) => setStockOutUnitPrice(parseFloat(e.target.value) || 0)}
+                                className="w-full px-3.5 py-2 font-bold text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+                              />
+                            </div>
+
+                            {/* KGS Logic Bar (Image 2) */}
+                            <div className="p-3 rounded-xl border border-rose-200 bg-rose-50/80 text-rose-950 text-xs space-y-1">
+                              <div className="flex items-center justify-between font-medium">
+                                <span>
+                                  KGS Logic:{' '}
+                                  <strong className="font-bold">
+                                    {stockOutDispatchMode === 'packets'
+                                      ? `${stockOutPackets} packets × 0.5 kg`
+                                      : 'Direct KGS Dispatch'}
+                                  </strong>
+                                </span>
+                                <span className="font-bold text-rose-700">
+                                  ={' '}
+                                  -
+                                  {stockOutDispatchMode === 'packets'
+                                    ? (stockOutPackets * 0.5).toFixed(1)
+                                    : stockOutDirectWeight}{' '}
+                                  KGS
+                                </span>
+                              </div>
+                              {stockOutDispatchMode === 'packets' &&
+                                stockOutPackets * 0.5 > (currentStockOutItem?.stock || 0) && (
+                                  <div className="text-red-500 font-normal text-xs pt-0.5">
+                                    Requested {(stockOutPackets * 0.5).toFixed(1)} KGS exceeds available stock ({currentStockOutItem?.stock || 0} KGS).
+                                  </div>
+                                )}
+                              {stockOutDispatchMode === 'direct' &&
+                                stockOutDirectWeight > (currentStockOutItem?.stock || 0) && (
+                                  <div className="text-red-500 font-normal text-xs pt-0.5">
+                                    Requested {stockOutDirectWeight} KGS exceeds available stock ({currentStockOutItem?.stock || 0} KGS).
+                                  </div>
+                                )}
+                              {((stockOutDispatchMode === 'packets' && stockOutPackets * 0.5 <= (currentStockOutItem?.stock || 0)) ||
+                                (stockOutDispatchMode === 'direct' && stockOutDirectWeight <= (currentStockOutItem?.stock || 0))) && (
+                                <div className="text-[11px] text-slate-600">
+                                  Remaining stock after dispatch:{' '}
+                                  <strong>
+                                    {Math.max(
+                                      0,
+                                      Number(
+                                        (
+                                          (currentStockOutItem?.stock || 0) -
+                                          (stockOutDispatchMode === 'packets' ? stockOutPackets * 0.5 : stockOutDirectWeight)
+                                        ).toFixed(1)
+                                      )
+                                    )}{' '}
+                                    KGS
+                                  </strong>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Submit Stock Out Button (Image 2) */}
+                            <button
+                              type="button"
+                              onClick={() => handleRecordStockOut()}
+                              className="w-full py-3.5 px-4 rounded-xl bg-[#e05252] hover:bg-[#d43f3f] active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                            >
+                              <MinusCircle className="w-4 h-4" />
+                              <span>
+                                {stockOutDispatchMode === 'packets'
+                                  ? `Process Stock OUT (-${(stockOutPackets * 0.5).toFixed(1)} KGS • ${stockOutPackets} Packet${stockOutPackets > 1 ? 's' : ''} • ₹${Math.round(
+                                      stockOutPackets * 0.5 * stockOutUnitPrice
+                                    ).toLocaleString()})`
+                                  : `Process Stock OUT (-${stockOutDirectWeight} KGS • ₹${Math.round(
+                                      stockOutDirectWeight * stockOutUnitPrice
+                                    ).toLocaleString()})`}
+                              </span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* CASE 2: PAC MODE (Image 1) */}
+                        {!isOutItemKg && (
+                          <div className="space-y-4">
+                            {/* Dispatch Quantity (PAC) * */}
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-700 block">
+                                  Dispatch Quantity (
+                                  {currentStockOutItem?.unit || currentStockOutItem?.uom || 'PAC'}) *
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setStockOutPacQty((prev) => Math.max(1, prev - 1))}
+                                    className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                  >
+                                    -
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={stockOutPacQty}
+                                    onChange={(e) => setStockOutPacQty(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="flex-1 h-10 text-center font-bold text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-2xs"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setStockOutPacQty((prev) => prev + 1)}
+                                    className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Preset Chips (Image 1: -1 PAC, -2 PAC, -3 PAC, -5 PAC, -10 PAC) */}
+                              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                {[1, 2, 3, 5, 10].map((qty) => {
+                                  const isSelected = stockOutPacQty === qty;
+                                  const unitLabel = currentStockOutItem?.unit || currentStockOutItem?.uom || 'PAC';
+                                  return (
+                                    <button
+                                      key={qty}
+                                      type="button"
+                                      onClick={() => setStockOutPacQty(qty)}
+                                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                        isSelected
+                                          ? 'border border-rose-300 bg-rose-50 text-rose-600 shadow-2xs'
+                                          : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                      }`}
+                                    >
+                                      -{qty} {unitLabel}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Selling Price per PAC Box (Image 1) */}
+                            <div className="p-3.5 rounded-2xl border border-blue-200/80 bg-[#f8fbff] space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-blue-900 uppercase flex items-center gap-1">
+                                  <IndianRupee className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>
+                                    SELLING PRICE PER{' '}
+                                    {currentStockOutItem?.unit || currentStockOutItem?.uom || 'PAC'} (₹)
+                                  </span>
+                                </span>
+                                <span className="bg-blue-600 text-white font-bold text-xs px-3 py-1 rounded-lg shadow-2xs">
+                                  Total: ₹
+                                  {Math.round(stockOutPacQty * stockOutUnitPrice).toLocaleString()}
+                                </span>
+                              </div>
+                              <input
+                                type="number"
+                                value={stockOutUnitPrice}
+                                onChange={(e) => setStockOutUnitPrice(parseFloat(e.target.value) || 0)}
+                                className="w-full px-3.5 py-2 font-bold text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+                              />
+                            </div>
+
+                            {/* PAC Logic Bar (Image 1) */}
+                            <div className="p-3 rounded-xl border border-rose-200 bg-rose-50/80 text-rose-950 text-xs space-y-1">
+                              <div className="flex items-center justify-between font-medium">
+                                <span>PAC Logic: Direct Packet Dispatch</span>
+                                <span className="font-bold text-rose-600">
+                                  -{stockOutPacQty}{' '}
+                                  {currentStockOutItem?.unit || currentStockOutItem?.uom || 'PAC'}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-slate-600">
+                                Remaining stock after dispatch:{' '}
+                                <strong className="font-bold">
+                                  {Math.max(0, (currentStockOutItem?.stock || 0) - stockOutPacQty)}{' '}
+                                  {currentStockOutItem?.unit || currentStockOutItem?.uom || 'PAC'}
+                                </strong>
+                              </div>
+                              {stockOutPacQty > (currentStockOutItem?.stock || 0) && (
+                                <div className="text-red-500 font-semibold text-xs pt-0.5">
+                                  Requested {stockOutPacQty} exceeds available stock ({currentStockOutItem?.stock || 0}).
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Submit Stock Out Button (Image 1) */}
+                            <button
+                              type="button"
+                              onClick={() => handleRecordStockOut()}
+                              className="w-full py-3.5 px-4 rounded-xl bg-[#e05252] hover:bg-[#d43f3f] active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                            >
+                              <MinusCircle className="w-4 h-4" />
+                              <span>
+                                Process Stock OUT (-{stockOutPacQty}{' '}
+                                {currentStockOutItem?.unit || currentStockOutItem?.uom || 'PAC'} • ₹
+                                {Math.round(stockOutPacQty * stockOutUnitPrice).toLocaleString()})
+                              </span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
