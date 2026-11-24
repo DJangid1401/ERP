@@ -1731,19 +1731,37 @@ export default function App() {
   }, [isScannerOpen]);
 
   const stopAndCloseScanner = () => {
-    if (html5QrCodeRef.current) {
-      html5QrCodeRef.current
-        .stop()
-        .then(() => {
-          html5QrCodeRef.current?.clear();
-          html5QrCodeRef.current = null;
-          setIsScannerOpen(false);
-        })
-        .catch(() => {
-          setIsScannerOpen(false);
-        });
-    } else {
-      setIsScannerOpen(false);
+    // 1. Instantly close modal and reset state in UI
+    setIsScannerOpen(false);
+    setScannerLoading(false);
+    setScannerError(null);
+
+    // 2. Safely cleanup scanner instance
+    const scanner = html5QrCodeRef.current;
+    if (scanner) {
+      html5QrCodeRef.current = null;
+      try {
+        if (scanner.isScanning) {
+          scanner
+            .stop()
+            .then(() => {
+              try {
+                scanner.clear();
+              } catch {}
+            })
+            .catch(() => {
+              try {
+                scanner.clear();
+              } catch {}
+            });
+        } else {
+          try {
+            scanner.clear();
+          } catch {}
+        }
+      } catch (err) {
+        console.warn('Error clearing scanner:', err);
+      }
     }
   };
 
@@ -3761,7 +3779,12 @@ export default function App() {
                     MODAL: MOBILE / DESKTOP QR & BARCODE CAMERA SCANNER
                    ========================================================================= */}
                 {isScannerOpen && (
-                  <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                  <div
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) stopAndCloseScanner();
+                    }}
+                    className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+                  >
                     <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
                       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                         <div className="flex items-center gap-2">
@@ -3776,7 +3799,8 @@ export default function App() {
                         <button
                           type="button"
                           onClick={stopAndCloseScanner}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                          className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                          aria-label="Close Scanner"
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -3822,6 +3846,16 @@ export default function App() {
                             Simulate Scan
                           </button>
                         </div>
+
+                        {/* Explicit Cancel / Close Button */}
+                        <button
+                          type="button"
+                          onClick={stopAndCloseScanner}
+                          className="w-full py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 active:scale-[0.99] text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <X className="w-4 h-4 text-slate-500" />
+                          <span>Cancel / Close Scanner</span>
+                        </button>
                       </div>
                     </div>
                   </div>
