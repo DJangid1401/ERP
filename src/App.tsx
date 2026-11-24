@@ -1904,15 +1904,6 @@ export default function App() {
           {isGlobalMode ? (
             /* In "All Companies": ONLY Central Governance & Dashboard! NO workspaces list! */
             <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto" aria-label="Central Group Navigation">
-              <div className="px-2 pt-1 pb-1 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
-                  Central Group Admin
-                </span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 font-semibold">
-                  HQ
-                </span>
-              </div>
-
               {[
                 { id: 'Dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: 'Group executive overview' },
                 { id: 'Task', label: 'Tasks', icon: CheckSquare, desc: 'Group-wide deliverables' },
@@ -2211,14 +2202,6 @@ export default function App() {
                   <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                     Consolidated overview • Siona Plasto, Sudhi Impex, Swati Enterprise, Vilaano (FY 2026–27)
                   </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => triggerToast('Group health check: All 4 entities synced and operational')}
-                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-                  >
-                    Run Group Diagnostics
-                  </button>
                 </div>
               </div>
 
