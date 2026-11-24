@@ -67,9 +67,14 @@ import {
   AtSign,
   Trash2,
   FileText,
-  AlertCircle
+  AlertCircle,
+  ArrowDown,
+  Scale,
+  PlusCircle,
+  Camera
 } from 'lucide-react';
 import QRCode from 'qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 // --- Companies Metadata (Multi-Company ERP) ---
 const COMPANIES = [
@@ -1145,17 +1150,22 @@ export default function App() {
     }
   }, [selectedQrItem]);
 
-  // Stock In Modal State
+  // Stock In (Inward) Modal State (Matching User Screenshots Image 1 & Image 2)
   const [isStockInModalOpen, setIsStockInModalOpen] = useState(false);
-  const [newStockIn, setNewStockIn] = useState({
-    company: 'Siona Plasto',
-    sku: 'SP-RM-101',
-    quantity: 1000,
-    supplier: '',
-    referenceNo: '',
-    location: '',
-    receivedBy: 'Deepak Sharma',
-  });
+  const [inwardProductCode, setInwardProductCode] = useState('PRD-HM001');
+  const [inwardProductName, setInwardProductName] = useState('HOLE MOTI');
+  const [inwardSize, setInwardSize] = useState('6 MM HOLE MOTI');
+  const [inwardColor, setInwardColor] = useState('T-1');
+  const [inwardBaseUnit, setInwardBaseUnit] = useState('KGS (Kilograms — Supports Direct KG & 500g Packets)');
+  const [inwardMode, setInwardMode] = useState<'direct' | 'packets'>('direct');
+  const [inwardWeight, setInwardWeight] = useState<number>(1);
+  const [inwardPackets, setInwardPackets] = useState<number>(1);
+
+  // Mobile / Desktop Camera Scanner State
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannerLoading, setScannerLoading] = useState(false);
+  const [scannerError, setScannerError] = useState<string | null>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   // Stock Out Modal State
   const [isStockOutModalOpen, setIsStockOutModalOpen] = useState(false);
@@ -1620,6 +1630,210 @@ export default function App() {
 
     setIsStockInModalOpen(false);
     triggerToast(`Stock In: +${qty} ${uom} added to ${itemName}`);
+  };
+
+  // Camera Scanner Lifecycle for Mobile & Desktop
+  useEffect(() => {
+    if (isScannerOpen) {
+      setScannerLoading(true);
+      setScannerError(null);
+      const timer = setTimeout(() => {
+        try {
+          const qrCodeScanner = new Html5Qrcode('html5-qr-reader');
+          html5QrCodeRef.current = qrCodeScanner;
+          qrCodeScanner
+            .start(
+              { facingMode: 'environment' },
+              {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0,
+              },
+              (decodedText) => {
+                handleScanSuccess(decodedText);
+              },
+              () => {
+                // Ignore per-frame warnings
+              }
+            )
+            .then(() => {
+              setScannerLoading(false);
+            })
+            .catch((err) => {
+              console.warn('Camera stream warning:', err);
+              setScannerLoading(false);
+              setScannerError('Direct camera stream unavailable. You can capture or pick a photo below.');
+            });
+        } catch (err: any) {
+          setScannerLoading(false);
+          setScannerError('Scanner setup: ' + err.message);
+        }
+      }, 300);
+
+      return () => {
+        clearTimeout(timer);
+        if (html5QrCodeRef.current) {
+          html5QrCodeRef.current
+            .stop()
+            .then(() => {
+              html5QrCodeRef.current?.clear();
+              html5QrCodeRef.current = null;
+            })
+            .catch((err) => console.warn('Scanner stop warning:', err));
+        }
+      };
+    }
+  }, [isScannerOpen]);
+
+  const stopAndCloseScanner = () => {
+    if (html5QrCodeRef.current) {
+      html5QrCodeRef.current
+        .stop()
+        .then(() => {
+          html5QrCodeRef.current?.clear();
+          html5QrCodeRef.current = null;
+          setIsScannerOpen(false);
+        })
+        .catch(() => {
+          setIsScannerOpen(false);
+        });
+    } else {
+      setIsScannerOpen(false);
+    }
+  };
+
+  const handleScanSuccess = (decodedText: string) => {
+    stopAndCloseScanner();
+    try {
+      const data = JSON.parse(decodedText);
+      const code = data.uniqueCode || data.code || data.sku || '';
+      setInwardProductCode(code);
+      if (data.name) setInwardProductName(data.name);
+      if (data.size) setInwardSize(data.size);
+      if (data.color) setInwardColor(data.color);
+      if (data.unit) {
+        if (data.unit === 'KG' || data.unit === 'KGS') {
+          setInwardBaseUnit('KGS (Kilograms — Supports Direct KG & 500g Packets)');
+        } else {
+          setInwardBaseUnit(data.unit);
+        }
+      }
+      triggerToast(`QR Scanned: ${data.name || code}!`);
+    } catch {
+      const cleanText = decodedText.trim();
+      setInwardProductCode(cleanText);
+      const matched = stockItems.find(
+        (item) => item.uniqueCode === cleanText || item.sku === cleanText
+      );
+      if (matched) {
+        setInwardProductName(matched.name);
+        setInwardSize(matched.size || '');
+        setInwardColor(matched.color || '');
+        if (matched.unit || matched.uom) {
+          if (matched.unit === 'KG' || matched.uom === 'KG') {
+            setInwardBaseUnit('KGS (Kilograms — Supports Direct KG & 500g Packets)');
+          } else {
+            setInwardBaseUnit(matched.unit || matched.uom);
+          }
+        }
+        triggerToast(`Matched: ${matched.name} (${cleanText})`);
+      } else {
+        triggerToast(`Scanned Code: ${cleanText}`);
+      }
+    }
+  };
+
+  const handleFileScan = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const scanner = html5QrCodeRef.current || new Html5Qrcode('html5-qr-reader');
+    scanner
+      .scanFile(file, true)
+      .then((decodedText) => {
+        handleScanSuccess(decodedText);
+      })
+      .catch((err) => {
+        triggerToast('Could not detect QR/Barcode in image. Please try again.');
+        console.error('File scan error:', err);
+      });
+  };
+
+  // Stock In (Inward) submission matching Image 1 & Image 2
+  const handleSubmitStockIn = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!inwardProductCode.trim() && !inwardProductName.trim()) {
+      triggerToast('Please provide a product code or product name');
+      return;
+    }
+
+    const isKg = inwardBaseUnit.startsWith('KGS');
+    const calculatedQty =
+      inwardMode === 'packets'
+        ? Number((inwardPackets * 0.5).toFixed(2))
+        : Number(inwardWeight) || 1;
+    const uom = isKg ? 'KGS' : inwardBaseUnit.split(' ')[0] || 'Units';
+    const finalCode = inwardProductCode.trim() || `PRD-${Date.now().toString().slice(-4)}`;
+    const finalName = inwardProductName.trim() || 'Stock Item';
+    const targetComp = selectedCompany !== 'All' ? selectedCompany : 'Siona Plasto';
+
+    // 1. Update or create stock item
+    setStockItems((prev) => {
+      const exists = prev.some((i) => i.uniqueCode === finalCode || i.sku === finalCode);
+      if (exists) {
+        return prev.map((item) => {
+          if (item.uniqueCode === finalCode || item.sku === finalCode) {
+            const newStock = item.stock + calculatedQty;
+            return {
+              ...item,
+              stock: newStock,
+              status: newStock > (item.minStock || 0) ? 'Optimal' : item.status,
+            };
+          }
+          return item;
+        });
+      } else {
+        const newItem = {
+          sku: finalCode,
+          uniqueCode: finalCode,
+          name: finalName,
+          size: inwardSize.trim() || 'Standard',
+          color: inwardColor.trim() || 'Standard',
+          colorHex: '#64748b',
+          price: 140,
+          unitPrice: 140,
+          stock: calculatedQty,
+          unit: uom,
+          uom: uom,
+          company: targetComp,
+          category: 'Finished Goods',
+          location: 'Vapi Plant - Bay A',
+          minStock: 5,
+          qrTag: `QR-${finalCode}`,
+          status: 'Optimal',
+        };
+        return [newItem, ...prev];
+      }
+    });
+
+    // 2. Add Stock IN inward record
+    const newInward = {
+      id: `INW-${Date.now().toString().slice(-5)}`,
+      date: new Date().toISOString().split('T')[0],
+      company: targetComp,
+      sku: finalCode,
+      itemName: `${finalName} (${inwardSize || 'Standard'}, ${inwardColor || 'Standard'})`,
+      quantity: calculatedQty,
+      uom: uom,
+      supplier: 'Inward GRN / Mobile Scanner',
+      referenceNo: `INW-${finalCode}`,
+      location: 'Main Warehouse',
+      receivedBy: 'Deepak Sharma',
+      status: 'QC Approved & Stored',
+    };
+    setStockInRecords((prev) => [newInward, ...prev]);
+
+    setIsStockInModalOpen(false);
+    triggerToast(`Stock IN: +${calculatedQty} ${uom} recorded for ${finalName}!`);
   };
 
   const handleRecordStockOut = (e) => {
@@ -2591,16 +2805,15 @@ export default function App() {
                       type="button"
                       onClick={() => {
                         const targetComp = currentComp !== 'All' ? currentComp : 'Siona Plasto';
-                        const itemsInComp = stockItems.filter(i => i.company === targetComp);
-                        setNewStockIn({
-                          company: targetComp,
-                          sku: itemsInComp[0]?.sku || stockItems[0]?.sku,
-                          quantity: 1000,
-                          supplier: '',
-                          referenceNo: '',
-                          location: '',
-                          receivedBy: 'Deepak Sharma',
-                        });
+                        const firstItem = stockItems.find(i => i.company === targetComp) || stockItems[0];
+                        setInwardProductCode(firstItem ? (firstItem.uniqueCode || firstItem.sku) : 'PRD-HM001');
+                        setInwardProductName(firstItem ? firstItem.name : 'HOLE MOTI');
+                        setInwardSize(firstItem ? (firstItem.size || '6 MM HOLE MOTI') : '6 MM HOLE MOTI');
+                        setInwardColor(firstItem ? (firstItem.color || 'T-1') : 'T-1');
+                        setInwardBaseUnit('KGS (Kilograms — Supports Direct KG & 500g Packets)');
+                        setInwardMode('direct');
+                        setInwardWeight(1);
+                        setInwardPackets(1);
                         setIsStockInModalOpen(true);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
@@ -3136,154 +3349,398 @@ export default function App() {
                 )}
 
                 {/* =========================================================================
-                    MODAL: RECORD STOCK IN (INWARD RECEIPT)
+                    MODAL: STOCK IN (INWARD) — Matching User Screenshots Image 1 & Image 2
                    ========================================================================= */}
                 {isStockInModalOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
-                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-                      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/50">
-                        <div>
-                          <h3 className="text-sm font-bold text-slate-900">Record Inward Stock (Stock In)</h3>
-                          <p className="text-[11px] text-slate-500">Log GRN, supplier purchases and incoming challans</p>
-                        </div>
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+                    <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-auto animate-in fade-in zoom-in-95">
+                      {/* Top Header with Circular Green Downward Arrow Icon */}
+                      <div className="pt-6 pb-4 px-6 text-center relative border-b border-slate-100">
                         <button
                           type="button"
                           onClick={() => setIsStockInModalOpen(false)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                          className="absolute right-4 top-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-5 h-5" />
+                        </button>
+                        <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto mb-2 shadow-2xs">
+                          <ArrowDown className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                          Stock IN (Inward)
+                        </h3>
+                      </div>
+
+                      {/* Modal Body */}
+                      <div className="p-6 space-y-4 text-xs">
+                        {/* Top Large Green Scan Button (Mobile & Desktop Camera Scanner) */}
+                        <button
+                          type="button"
+                          onClick={() => setIsScannerOpen(true)}
+                          className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-sm transition-all cursor-pointer"
+                        >
+                          <QrCode className="w-5 h-5" />
+                          <span>Scan QR / Barcode</span>
+                        </button>
+
+                        {/* Centered Divider: MANUAL PRODUCT CODE & DETAILS */}
+                        <div className="relative my-4 text-center">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-slate-200" />
+                          </div>
+                          <div className="relative inline-block bg-white px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            MANUAL PRODUCT CODE &amp; DETAILS
+                          </div>
+                        </div>
+
+                        {/* Unique Product Code * */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700 block">
+                            Unique Product Code *
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Enter product code (e.g. PRD-HM001)"
+                              value={inwardProductCode}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setInwardProductCode(val);
+                                const match = stockItems.find(
+                                  (i) => i.uniqueCode?.toLowerCase() === val.trim().toLowerCase() || i.sku?.toLowerCase() === val.trim().toLowerCase()
+                                );
+                                if (match) {
+                                  setInwardProductName(match.name);
+                                  if (match.size) setInwardSize(match.size);
+                                  if (match.color) setInwardColor(match.color);
+                                  if (match.unit || match.uom) {
+                                    if (match.unit === 'KG' || match.uom === 'KG') {
+                                      setInwardBaseUnit('KGS (Kilograms — Supports Direct KG & 500g Packets)');
+                                    } else {
+                                      setInwardBaseUnit(match.unit || match.uom);
+                                    }
+                                  }
+                                }
+                              }}
+                              className="w-full px-3.5 py-2.5 text-xs font-mono font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-16 text-slate-900 shadow-2xs"
+                              required
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">EN</span>
+                              <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Product Name / Category * */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700 block">
+                            Product Name / Category *
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="e.g. HOLE MOTI, TYRE"
+                              value={inwardProductName}
+                              onChange={(e) => setInwardProductName(e.target.value)}
+                              className="w-full px-3.5 py-2.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-10 text-slate-900 shadow-2xs"
+                              required
+                            />
+                            <Mic className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-slate-600" />
+                          </div>
+                        </div>
+
+                        {/* Size (Optional) & Color (Optional) */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Size (Optional)
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="e.g. 6 MM HOLE MOTI, 2.5 MM"
+                                value={inwardSize}
+                                onChange={(e) => setInwardSize(e.target.value)}
+                                className="w-full px-3 py-2.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-8 text-slate-900 shadow-2xs"
+                              />
+                              <Mic className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer hover:text-slate-600" />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Color (Optional)
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="e.g. T-1, T-7, Black"
+                                value={inwardColor}
+                                onChange={(e) => setInwardColor(e.target.value)}
+                                className="w-full px-3 py-2.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-8 text-slate-900 shadow-2xs"
+                              />
+                              <Mic className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer hover:text-slate-600" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Base Stock Unit * */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-slate-700 block">
+                            Base Stock Unit *
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={inwardBaseUnit}
+                              onChange={(e) => setInwardBaseUnit(e.target.value)}
+                              className="w-full appearance-none px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 pr-8 shadow-2xs cursor-pointer"
+                            >
+                              <option value="KGS (Kilograms — Supports Direct KG & 500g Packets)">
+                                KGS (Kilograms — Supports Direct KG &amp; 500g Packets)
+                              </option>
+                              <option value="PAC (Packets / Packages)">
+                                PAC (Packets / Packages)
+                              </option>
+                              <option value="Units (Individual Pieces / Crates)">
+                                Units (Individual Pieces / Crates)
+                              </option>
+                              <option value="Meters">Meters</option>
+                              <option value="Pairs">Pairs</option>
+                              <option value="Tins">Tins</option>
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        {/* SELECT INWARD ENTRY MODE Box */}
+                        <div className="p-3.5 rounded-2xl border border-slate-200/90 bg-slate-50/60 space-y-2.5">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            SELECT INWARD ENTRY MODE
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setInwardMode('direct')}
+                              className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                inwardMode === 'direct'
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100/80'
+                              }`}
+                            >
+                              <Scale className="w-4 h-4" />
+                              <span>Direct KGS</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setInwardMode('packets')}
+                              className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                inwardMode === 'packets'
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100/80'
+                              }`}
+                            >
+                              <Package className="w-4 h-4" />
+                              <span>500g Packets</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* MODE 1: Direct KGS (Image 1) */}
+                        {inwardMode === 'direct' && (
+                          <div className="space-y-3 animate-in fade-in">
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-bold text-slate-700 block">
+                                Weight in KGS (e.g. 5.5) *
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setInwardWeight((prev) => Math.max(0.5, Number((prev - 0.5).toFixed(1))))}
+                                  className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0.1"
+                                  value={inwardWeight}
+                                  onChange={(e) => setInwardWeight(Math.max(0.1, parseFloat(e.target.value) || 0))}
+                                  className="flex-1 h-10 text-center font-bold text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setInwardWeight((prev) => Number((prev + 0.5).toFixed(1)))}
+                                  className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleSubmitStockIn()}
+                              className="w-full py-3.5 px-4 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                            >
+                              <PlusCircle className="w-4 h-4" />
+                              <span>Submit Stock IN (+{inwardWeight} KGS)</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* MODE 2: 500g Packets (Image 2) */}
+                        {inwardMode === 'packets' && (
+                          <div className="space-y-3 animate-in fade-in">
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-bold text-slate-700 block">
+                                Number of 500g Packets *
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setInwardPackets((prev) => Math.max(1, prev - 1))}
+                                  className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={inwardPackets}
+                                  onChange={(e) => setInwardPackets(Math.max(1, parseInt(e.target.value) || 1))}
+                                  className="flex-1 h-10 text-center font-bold text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setInwardPackets((prev) => prev + 1)}
+                                  className="w-12 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Preset Buttons matching Image 2 */}
+                            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                              {[
+                                { pkts: 1, label: '1 Pkt (0.5 kg)' },
+                                { pkts: 2, label: '2 Pkts (1 kg)' },
+                                { pkts: 5, label: '5 Pkts (2.5 kg)' },
+                                { pkts: 10, label: '10 Pkts (5 kg)' },
+                                { pkts: 20, label: '20 Pkts (10 kg)' },
+                              ].map((preset) => {
+                                const isSelected = inwardPackets === preset.pkts;
+                                return (
+                                  <button
+                                    key={preset.pkts}
+                                    type="button"
+                                    onClick={() => setInwardPackets(preset.pkts)}
+                                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                                      isSelected
+                                        ? 'border border-emerald-400 bg-emerald-50 text-emerald-800 shadow-2xs'
+                                        : 'border border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                  >
+                                    {preset.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* KGS Logic Bar matching Image 2 */}
+                            <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/80 text-emerald-950 text-xs flex items-center justify-between font-medium">
+                              <span>
+                                KGS Logic: <strong className="font-bold">{inwardPackets} packets × 0.5 kg</strong>
+                              </span>
+                              <span className="font-bold text-emerald-700">
+                                = +{(inwardPackets * 0.5).toFixed(1)} KGS
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleSubmitStockIn()}
+                              className="w-full py-3.5 px-4 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] active:scale-[0.99] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                            >
+                              <PlusCircle className="w-4 h-4" />
+                              <span>
+                                Submit Stock IN (+{(inwardPackets * 0.5).toFixed(1)} KGS • {inwardPackets} Packet{inwardPackets > 1 ? 's' : ''})
+                              </span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* =========================================================================
+                    MODAL: MOBILE / DESKTOP QR & BARCODE CAMERA SCANNER
+                   ========================================================================= */}
+                {isScannerOpen && (
+                  <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
+                            <QrCode className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900">Scan QR / Barcode</h4>
+                            <p className="text-[11px] text-slate-500">Point mobile camera or capture label photo</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={stopAndCloseScanner}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                        >
+                          <X className="w-5 h-5" />
                         </button>
                       </div>
 
-                      <form onSubmit={handleRecordStockIn} className="p-5 space-y-3.5 text-xs">
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-700">Company *</label>
-                          <select
-                            value={newStockIn.company}
-                            onChange={(e) => {
-                              const comp = e.target.value;
-                              const compItems = stockItems.filter(i => i.company === comp);
-                              setNewStockIn({
-                                ...newStockIn,
-                                company: comp,
-                                sku: compItems[0]?.sku || '',
-                              });
-                            }}
-                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
-                          >
-                            {COMPANIES.filter(c => c.id !== 'All').map(c => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                          </select>
+                      <div className="p-5 space-y-3">
+                        {/* Camera Stream Viewport */}
+                        <div className="overflow-hidden rounded-2xl bg-black relative min-h-[250px] flex items-center justify-center border-2 border-emerald-500/40">
+                          <div id="html5-qr-reader" className="w-full h-full" />
+                          {scannerLoading && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-xs gap-2 bg-black/75">
+                              <Camera className="w-8 h-8 animate-pulse text-emerald-400" />
+                              <span className="font-semibold">Starting camera scanner...</span>
+                            </div>
+                          )}
+                          {scannerError && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-200 text-xs p-4 text-center bg-black/85 space-y-2">
+                              <Camera className="w-8 h-8 text-amber-400" />
+                              <span className="text-amber-200 font-medium">{scannerError}</span>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-700">Select Item / SKU *</label>
-                          <select
-                            value={newStockIn.sku}
-                            onChange={(e) => setNewStockIn({ ...newStockIn, sku: e.target.value })}
-                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
-                            required
-                          >
-                            {stockItems
-                              .filter(i => i.company === newStockIn.company)
-                              .map(i => (
-                                <option key={i.sku} value={i.sku}>
-                                  {i.sku} — {i.name} ({i.stock} {i.uom} in stock)
-                                </option>
-                              ))}
-                          </select>
-                        </div>
+                        {/* Fallback buttons for Mobile phone camera capture & quick test */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <label className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs text-center cursor-pointer flex items-center justify-center gap-2 transition-colors">
+                            <Camera className="w-4 h-4 text-emerald-600" />
+                            <span>Capture / Pick Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              className="hidden"
+                              onChange={handleFileScan}
+                            />
+                          </label>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">Inward Quantity *</label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={newStockIn.quantity}
-                              onChange={(e) => setNewStockIn({ ...newStockIn, quantity: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">UOM</label>
-                            <input
-                              type="text"
-                              disabled
-                              value={stockItems.find(i => i.sku === newStockIn.sku)?.uom || 'Units'}
-                              className="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 font-bold"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">Supplier / Vendor *</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. Reliance Petrochem / Agro Benin"
-                              value={newStockIn.supplier}
-                              onChange={(e) => setNewStockIn({ ...newStockIn, supplier: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">PO / Invoice / Challan Ref *</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. PO-8841 / INV-991"
-                              value={newStockIn.referenceNo}
-                              onChange={(e) => setNewStockIn({ ...newStockIn, referenceNo: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg"
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">Warehouse Location</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. Central Silo / Cold Store"
-                              value={newStockIn.location}
-                              onChange={(e) => setNewStockIn({ ...newStockIn, location: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-700">Received By</label>
-                            <select
-                              value={newStockIn.receivedBy}
-                              onChange={(e) => setNewStockIn({ ...newStockIn, receivedBy: e.target.value })}
-                              className="w-full p-2 border border-slate-200 rounded-lg bg-white"
-                            >
-                              {STAFF_MEMBERS.map(staff => (
-                                <option key={staff} value={staff}>{staff}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                           <button
                             type="button"
-                            onClick={() => setIsStockInModalOpen(false)}
-                            className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-semibold text-xs hover:bg-slate-50 cursor-pointer"
+                            onClick={() => handleScanSuccess('PRD-0001')}
+                            className="py-2.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 font-bold text-xs transition-colors cursor-pointer"
                           >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs cursor-pointer shadow-2xs"
-                          >
-                            Save Stock In (+Add Stock)
+                            Simulate Scan
                           </button>
                         </div>
-                      </form>
+                      </div>
                     </div>
                   </div>
                 )}
