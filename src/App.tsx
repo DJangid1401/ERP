@@ -846,10 +846,12 @@ export default function App() {
       if (activeNav === 'Workspaces' || WORKSPACES_CONFIG.some((w) => w.id === activeNav)) {
         setActiveNav('Dashboard');
       }
+      setInventoryCompanyFilter('All');
     } else {
       if (activeNav === 'Dashboard') {
         setActiveNav('Workspaces');
       }
+      setInventoryCompanyFilter(selectedCompany);
     }
   }, [selectedCompany]);
 
@@ -2068,15 +2070,15 @@ export default function App() {
 
           {/* =========================================================================
               VIEW 3: MULTI-COMPANY INVENTORY (Stock List, Stock In, Stock Out)
-              Directly synced with top-left Selected Company (Siona Plasto, Sudhi, Swati, Vilaano)
+              With in-bar Company Filter Option (in Siona, Sudhi, Swati, Vilaano)
              ========================================================================= */}
           {activeNav === 'Inventory' && (() => {
-            const isSingleCompanyMode = selectedCompany !== 'All';
-            const currentComp = isSingleCompanyMode ? selectedCompany : inventoryCompanyFilter;
+            const currentComp = inventoryCompanyFilter;
+            const isAll = currentComp === 'All';
 
-            // Filter items based on active company
+            // Filter items based on active company filter
             const displayedStockItems = stockItems.filter(item => {
-              const matchesCompany = currentComp === 'All' || item.company === currentComp;
+              const matchesCompany = isAll || item.company === currentComp;
               const s = inventorySearch.toLowerCase();
               const matchesSearch =
                 inventorySearch === '' ||
@@ -2088,7 +2090,7 @@ export default function App() {
             });
 
             const displayedStockIn = stockInRecords.filter(r => {
-              const matchesCompany = currentComp === 'All' || r.company === currentComp;
+              const matchesCompany = isAll || r.company === currentComp;
               const s = inventorySearch.toLowerCase();
               const matchesSearch =
                 inventorySearch === '' ||
@@ -2100,7 +2102,7 @@ export default function App() {
             });
 
             const displayedStockOut = stockOutRecords.filter(r => {
-              const matchesCompany = currentComp === 'All' || r.company === currentComp;
+              const matchesCompany = isAll || r.company === currentComp;
               const s = inventorySearch.toLowerCase();
               const matchesSearch =
                 inventorySearch === '' ||
@@ -2111,18 +2113,9 @@ export default function App() {
               return matchesCompany && matchesSearch;
             });
 
-            const companyScopedItems = isSingleCompanyMode
-              ? stockItems.filter(i => i.company === selectedCompany)
-              : (inventoryCompanyFilter === 'All' ? stockItems : stockItems.filter(i => i.company === inventoryCompanyFilter));
-
-            const companyScopedIn = isSingleCompanyMode
-              ? stockInRecords.filter(r => r.company === selectedCompany)
-              : (inventoryCompanyFilter === 'All' ? stockInRecords : stockInRecords.filter(r => r.company === inventoryCompanyFilter));
-
-            const companyScopedOut = isSingleCompanyMode
-              ? stockOutRecords.filter(r => r.company === selectedCompany)
-              : (inventoryCompanyFilter === 'All' ? stockOutRecords : stockOutRecords.filter(r => r.company === inventoryCompanyFilter));
-
+            const companyScopedItems = isAll ? stockItems : stockItems.filter(i => i.company === currentComp);
+            const companyScopedIn = isAll ? stockInRecords : stockInRecords.filter(r => r.company === currentComp);
+            const companyScopedOut = isAll ? stockOutRecords : stockOutRecords.filter(r => r.company === currentComp);
             const lowStockCount = companyScopedItems.filter(i => i.status === 'Low Stock').length;
 
             return (
@@ -2132,12 +2125,12 @@ export default function App() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-bold text-slate-900">
-                        {isSingleCompanyMode ? `${selectedCompany} — Inventory Hub` : 'Central Group Inventory Hub'}
+                        {isAll ? 'Central Group — Inventory Hub' : `${currentComp} — Inventory Hub`}
                       </h2>
-                      {isSingleCompanyMode ? (
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${getCompanyBadgeStyle(selectedCompany)}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(selectedCompany)}`} />
-                          {selectedCompany}
+                      {!isAll ? (
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${getCompanyBadgeStyle(currentComp)}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(currentComp)}`} />
+                          {currentComp}
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -2146,16 +2139,16 @@ export default function App() {
                       )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {isSingleCompanyMode
-                        ? `Live Stock List, Inward GRN (Stock In), and Outward Dispatches (Stock Out) for ${selectedCompany}.`
-                        : 'Consolidated stock ledger across Siona Plasto, Sudhi Impex, Swati Enterprise and Vilaano.'}
+                      {isAll
+                        ? 'Consolidated stock ledger across Siona Plasto, Sudhi Impex, Swati Enterprise and Vilaano.'
+                        : `Live Stock List, Inward GRN (Stock In), and Outward Dispatches (Stock Out) for ${currentComp}.`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
-                        const targetComp = isSingleCompanyMode ? selectedCompany : (inventoryCompanyFilter !== 'All' ? inventoryCompanyFilter : 'Siona Plasto');
+                        const targetComp = currentComp !== 'All' ? currentComp : 'Siona Plasto';
                         const itemsInComp = stockItems.filter(i => i.company === targetComp);
                         setNewStockIn({
                           company: targetComp,
@@ -2168,7 +2161,7 @@ export default function App() {
                         });
                         setIsStockInModalOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Record Stock In</span>
@@ -2177,7 +2170,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => {
-                        const targetComp = isSingleCompanyMode ? selectedCompany : (inventoryCompanyFilter !== 'All' ? inventoryCompanyFilter : 'Siona Plasto');
+                        const targetComp = currentComp !== 'All' ? currentComp : 'Siona Plasto';
                         const itemsInComp = stockItems.filter(i => i.company === targetComp);
                         setNewStockOut({
                           company: targetComp,
@@ -2189,7 +2182,7 @@ export default function App() {
                         });
                         setIsStockOutModalOpen(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
                     >
                       <Truck className="w-3.5 h-3.5" />
                       <span>Record Stock Out</span>
@@ -2201,7 +2194,7 @@ export default function App() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      {isSingleCompanyMode ? `${selectedCompany} SKUs` : 'Total SKUs Tracked'}
+                      {isAll ? 'Total SKUs Tracked' : `${currentComp} SKUs`}
                     </span>
                     <div className="text-xl font-bold text-slate-900 mt-0.5">
                       {companyScopedItems.length} Items
@@ -2227,53 +2220,11 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Sub-Tabs Bar + Search (And company pills ONLY when selectedCompany is 'All') */}
-                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3">
-                  {/* Company Filter Pills: Rendered ONLY in All Companies mode */}
-                  {!isSingleCompanyMode && (
-                    <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-slate-100">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1.5">
-                        Filter Company:
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setInventoryCompanyFilter('All')}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          inventoryCompanyFilter === 'All'
-                            ? 'bg-slate-900 text-white shadow-2xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
-                        }`}
-                      >
-                        All Companies ({stockItems.length})
-                      </button>
-                      {COMPANIES.filter((c) => c.id !== 'All').map((c) => {
-                        const count = stockItems.filter((i) => i.company === c.id).length;
-                        const isSelected = inventoryCompanyFilter === c.id;
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => setInventoryCompanyFilter(c.id)}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-indigo-600 text-white shadow-2xs'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : getCompanyDotColor(c.id)}`} />
-                            <span>{c.name}</span>
-                            <span className={`text-[10px] px-1 py-0.2 rounded font-bold ${isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-200/80 text-slate-600'}`}>
-                              {count}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Sub-Tabs: Stock List, Stock In, Stock Out + Search */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                {/* Sub-Tabs Bar + Company Filter Option (in yellow highlighted spot) + Search */}
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    {/* Left: Sub-Tabs */}
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
                       <button
                         type="button"
                         onClick={() => setInventoryTab('StockList')}
@@ -2315,6 +2266,28 @@ export default function App() {
                       </button>
                     </div>
 
+                    {/* Middle: Company Filter Option (Yellow highlighted area in user screenshot) */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100/90 px-3 py-1.5 rounded-xl border border-slate-200 transition-colors shadow-2xs">
+                        <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                          Company Filter:
+                        </span>
+                        <select
+                          value={inventoryCompanyFilter}
+                          onChange={(e) => setInventoryCompanyFilter(e.target.value)}
+                          className="text-xs font-bold text-slate-800 bg-transparent border-0 focus:outline-none cursor-pointer pr-1"
+                        >
+                          <option value="All">All Companies ({stockItems.length} SKUs)</option>
+                          <option value="Siona Plasto">Siona Plasto (4 SKUs)</option>
+                          <option value="Sudhi Impex">Sudhi Impex (4 SKUs)</option>
+                          <option value="Swati Enterprise">Swati Enterprise (4 SKUs)</option>
+                          <option value="Vilaano">Vilaano (4 SKUs)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Right: Search Input */}
                     <div className="relative w-full sm:w-64">
                       <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                       <input
@@ -2338,7 +2311,7 @@ export default function App() {
                         <tr>
                           <th className="py-3 px-3">SKU Code</th>
                           <th className="py-3 px-3 min-w-[200px]">Item Name & Category</th>
-                          {!isSingleCompanyMode && <th className="py-3 px-3">Company</th>}
+                          <th className="py-3 px-3">Company</th>
                           <th className="py-3 px-3">Warehouse Location</th>
                           <th className="py-3 px-3">Current Stock</th>
                           <th className="py-3 px-3">Unit Valuation</th>
@@ -2349,7 +2322,7 @@ export default function App() {
                       <tbody className="divide-y divide-slate-100">
                         {displayedStockItems.length === 0 ? (
                           <tr>
-                            <td colSpan={isSingleCompanyMode ? 7 : 8} className="py-8 text-center text-slate-400">
+                            <td colSpan={8} className="py-8 text-center text-slate-400">
                               No inventory items found matching the filter.
                             </td>
                           </tr>
@@ -2363,14 +2336,12 @@ export default function App() {
                                 <div className="font-semibold text-slate-900">{item.name}</div>
                                 <div className="text-[11px] text-slate-500">{item.category}</div>
                               </td>
-                              {!isSingleCompanyMode && (
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(item.company)}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(item.company)}`} />
-                                    {item.company}
-                                  </span>
-                                </td>
-                              )}
+                              <td className="py-3 px-3 whitespace-nowrap">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(item.company)}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(item.company)}`} />
+                                  {item.company}
+                                </span>
+                              </td>
                               <td className="py-3 px-3 text-slate-600 font-medium whitespace-nowrap">
                                 {item.location}
                               </td>
@@ -2430,7 +2401,7 @@ export default function App() {
                           <th className="py-3 px-3">Inward ID</th>
                           <th className="py-3 px-3">Date</th>
                           <th className="py-3 px-3 min-w-[180px]">Item & SKU</th>
-                          {!isSingleCompanyMode && <th className="py-3 px-3">Company</th>}
+                          <th className="py-3 px-3">Company</th>
                           <th className="py-3 px-3">Quantity Received</th>
                           <th className="py-3 px-3">Supplier / Vendor</th>
                           <th className="py-3 px-3">PO / Challan Ref</th>
@@ -2441,7 +2412,7 @@ export default function App() {
                       <tbody className="divide-y divide-slate-100">
                         {displayedStockIn.length === 0 ? (
                           <tr>
-                            <td colSpan={isSingleCompanyMode ? 8 : 9} className="py-8 text-center text-slate-400">
+                            <td colSpan={9} className="py-8 text-center text-slate-400">
                               No inward stock records found matching the filter.
                             </td>
                           </tr>
@@ -2456,14 +2427,12 @@ export default function App() {
                                 <div className="font-semibold text-slate-900">{r.itemName}</div>
                                 <div className="text-[10px] font-mono text-slate-400">{r.sku}</div>
                               </td>
-                              {!isSingleCompanyMode && (
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(r.company)}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(r.company)}`} />
-                                    {r.company}
-                                  </span>
-                                </td>
-                              )}
+                              <td className="py-3 px-3 whitespace-nowrap">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(r.company)}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(r.company)}`} />
+                                  {r.company}
+                                </span>
+                              </td>
                               <td className="py-3 px-3 whitespace-nowrap">
                                 <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                                   +{r.quantity.toLocaleString()} {r.uom}
@@ -2504,7 +2473,7 @@ export default function App() {
                           <th className="py-3 px-3">Outward ID</th>
                           <th className="py-3 px-3">Date</th>
                           <th className="py-3 px-3 min-w-[180px]">Item & SKU</th>
-                          {!isSingleCompanyMode && <th className="py-3 px-3">Company</th>}
+                          <th className="py-3 px-3">Company</th>
                           <th className="py-3 px-3">Quantity Dispatched</th>
                           <th className="py-3 px-3">Customer / Destination</th>
                           <th className="py-3 px-3">Delivery Challan / Invoice</th>
@@ -2515,7 +2484,7 @@ export default function App() {
                       <tbody className="divide-y divide-slate-100">
                         {displayedStockOut.length === 0 ? (
                           <tr>
-                            <td colSpan={isSingleCompanyMode ? 8 : 9} className="py-8 text-center text-slate-400">
+                            <td colSpan={9} className="py-8 text-center text-slate-400">
                               No outward stock dispatches found matching the filter.
                             </td>
                           </tr>
@@ -2530,14 +2499,12 @@ export default function App() {
                                 <div className="font-semibold text-slate-900">{r.itemName}</div>
                                 <div className="text-[10px] font-mono text-slate-400">{r.sku}</div>
                               </td>
-                              {!isSingleCompanyMode && (
-                                <td className="py-3 px-3 whitespace-nowrap">
-                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(r.company)}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(r.company)}`} />
-                                    {r.company}
-                                  </span>
-                                </td>
-                              )}
+                              <td className="py-3 px-3 whitespace-nowrap">
+                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(r.company)}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(r.company)}`} />
+                                  {r.company}
+                                </span>
+                              </td>
                               <td className="py-3 px-3 whitespace-nowrap">
                                 <span className="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
                                   -{r.quantity.toLocaleString()} {r.uom}
@@ -2580,38 +2547,27 @@ export default function App() {
                       </div>
 
                       <form onSubmit={handleRecordStockIn} className="p-5 space-y-3.5 text-xs">
-                        {/* Company Selector */}
                         <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-700">Company</label>
-                          {isSingleCompanyMode ? (
-                            <input
-                              type="text"
-                              value={selectedCompany}
-                              disabled
-                              className="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-bold"
-                            />
-                          ) : (
-                            <select
-                              value={newStockIn.company}
-                              onChange={(e) => {
-                                const comp = e.target.value;
-                                const compItems = stockItems.filter(i => i.company === comp);
-                                setNewStockIn({
-                                  ...newStockIn,
-                                  company: comp,
-                                  sku: compItems[0]?.sku || '',
-                                });
-                              }}
-                              className="w-full p-2 border border-slate-200 rounded-lg bg-white"
-                            >
-                              {COMPANIES.filter(c => c.id !== 'All').map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                              ))}
-                            </select>
-                          )}
+                          <label className="text-[11px] font-bold text-slate-700">Company *</label>
+                          <select
+                            value={newStockIn.company}
+                            onChange={(e) => {
+                              const comp = e.target.value;
+                              const compItems = stockItems.filter(i => i.company === comp);
+                              setNewStockIn({
+                                ...newStockIn,
+                                company: comp,
+                                sku: compItems[0]?.sku || '',
+                              });
+                            }}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                          >
+                            {COMPANIES.filter(c => c.id !== 'All').map(c => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
                         </div>
 
-                        {/* Item Selector */}
                         <div className="space-y-1">
                           <label className="text-[11px] font-bold text-slate-700">Select Item / SKU *</label>
                           <select
@@ -2621,7 +2577,7 @@ export default function App() {
                             required
                           >
                             {stockItems
-                              .filter(i => i.company === (isSingleCompanyMode ? selectedCompany : newStockIn.company))
+                              .filter(i => i.company === newStockIn.company)
                               .map(i => (
                                 <option key={i.sku} value={i.sku}>
                                   {i.sku} — {i.name} ({i.stock} {i.uom} in stock)
@@ -2630,7 +2586,6 @@ export default function App() {
                           </select>
                         </div>
 
-                        {/* Quantity & Unit */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-[11px] font-bold text-slate-700">Inward Quantity *</label>
@@ -2654,7 +2609,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Supplier & Reference */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-[11px] font-bold text-slate-700">Supplier / Vendor *</label>
@@ -2680,7 +2634,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Location & Received By */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-[11px] font-bold text-slate-700">Warehouse Location</label>
@@ -2747,38 +2700,27 @@ export default function App() {
                       </div>
 
                       <form onSubmit={handleRecordStockOut} className="p-5 space-y-3.5 text-xs">
-                        {/* Company Selector */}
                         <div className="space-y-1">
-                          <label className="text-[11px] font-bold text-slate-700">Company</label>
-                          {isSingleCompanyMode ? (
-                            <input
-                              type="text"
-                              value={selectedCompany}
-                              disabled
-                              className="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-bold"
-                            />
-                          ) : (
-                            <select
-                              value={newStockOut.company}
-                              onChange={(e) => {
-                                const comp = e.target.value;
-                                const compItems = stockItems.filter(i => i.company === comp);
-                                setNewStockOut({
-                                  ...newStockOut,
-                                  company: comp,
-                                  sku: compItems[0]?.sku || '',
-                                });
-                              }}
-                              className="w-full p-2 border border-slate-200 rounded-lg bg-white"
-                            >
-                              {COMPANIES.filter(c => c.id !== 'All').map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                              ))}
-                            </select>
-                          )}
+                          <label className="text-[11px] font-bold text-slate-700">Company *</label>
+                          <select
+                            value={newStockOut.company}
+                            onChange={(e) => {
+                              const comp = e.target.value;
+                              const compItems = stockItems.filter(i => i.company === comp);
+                              setNewStockOut({
+                                ...newStockOut,
+                                company: comp,
+                                sku: compItems[0]?.sku || '',
+                              });
+                            }}
+                            className="w-full p-2 border border-slate-200 rounded-lg bg-white"
+                          >
+                            {COMPANIES.filter(c => c.id !== 'All').map(c => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
                         </div>
 
-                        {/* Item Selector with Available Stock Display */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
                             <label className="text-[11px] font-bold text-slate-700">Select Item / SKU *</label>
@@ -2793,7 +2735,7 @@ export default function App() {
                             required
                           >
                             {stockItems
-                              .filter(i => i.company === (isSingleCompanyMode ? selectedCompany : newStockOut.company))
+                              .filter(i => i.company === newStockOut.company)
                               .map(i => (
                                 <option key={i.sku} value={i.sku}>
                                   {i.sku} — {i.name} (Stock: {i.stock} {i.uom})
@@ -2802,7 +2744,6 @@ export default function App() {
                           </select>
                         </div>
 
-                        {/* Quantity & Unit */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-[11px] font-bold text-slate-700">Dispatch Quantity *</label>
@@ -2827,7 +2768,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Customer / Destination & Delivery Challan */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
                             <label className="text-[11px] font-bold text-slate-700">Customer / Destination *</label>
@@ -2853,7 +2793,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Dispatched By */}
                         <div className="space-y-1">
                           <label className="text-[11px] font-bold text-slate-700">Dispatched By</label>
                           <select
