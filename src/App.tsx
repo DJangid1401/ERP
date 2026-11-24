@@ -55,6 +55,10 @@ import {
   Home,
   SlidersHorizontal,
   ChevronRight,
+  ChevronLeft,
+  Printer,
+  Download,
+  Mic,
   Paperclip,
   MessageSquare,
   Repeat,
@@ -65,6 +69,7 @@ import {
   FileText,
   AlertCircle
 } from 'lucide-react';
+import QRCode from 'qrcode';
 
 // --- Companies Metadata (Multi-Company ERP) ---
 const COMPANIES = [
@@ -696,29 +701,355 @@ const getCompanyBadgeStyle = (companyName) => {
 // Siona Plasto, Sudhi Impex, Swati Enterprise, Vilaano
 // =========================================================================
 const INITIAL_STOCK_LIST = [
-  // Siona Plasto (Polymer & Industrial Packaging)
-  { sku: 'SP-RM-101', name: 'HDPE Virgin Granules (Reliance M60075)', company: 'Siona Plasto', category: 'Raw Material Polymer', stock: 14200, uom: 'KG', minStock: 5000, location: 'Vapi Plant - Silo 2', unitPrice: 92, qrTag: 'QR-SP-8810', status: 'Optimal' },
-  { sku: 'SP-RM-104', name: 'Masterbatch Royal Blue Pigment', company: 'Siona Plasto', category: 'Color Additive', stock: 340, uom: 'KG', minStock: 500, location: 'Vapi Plant - Chem Store', unitPrice: 240, qrTag: 'QR-SP-8814', status: 'Low Stock' },
-  { sku: 'SP-FG-205', name: 'Industrial Crates 600x400x320mm', company: 'Siona Plasto', category: 'Finished Goods', stock: 3450, uom: 'Units', minStock: 1000, location: 'Vapi Plant - Bay C', unitPrice: 420, qrTag: 'QR-SP-8902', status: 'Optimal' },
-  { sku: 'SP-FG-209', name: '20L Chemical Jerrycan UN-Certified', company: 'Siona Plasto', category: 'Finished Goods', stock: 620, uom: 'Units', minStock: 800, location: 'Vapi Plant - Bay A', unitPrice: 185, qrTag: 'QR-SP-8911', status: 'Low Stock' },
+  // Siona Plasto (Polymer & Industrial Packaging) — Products matching Image 3
+  {
+    sku: 'PRD-0001',
+    uniqueCode: 'PRD-0001',
+    name: 'TYRE',
+    size: '2.5 MM TYRE',
+    color: 'T-1',
+    colorHex: '#4b5563',
+    price: 140,
+    unitPrice: 140,
+    stock: 22,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay A',
+    minStock: 10,
+    qrTag: 'QR-PRD-0001',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-0013',
+    uniqueCode: 'PRD-0013',
+    name: 'TYRE',
+    size: '2.5 MM TYRE',
+    color: 'N-25',
+    colorHex: '#475569',
+    price: 140,
+    unitPrice: 140,
+    stock: 15,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay A',
+    minStock: 10,
+    qrTag: 'QR-PRD-0013',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-0020',
+    uniqueCode: 'PRD-0020',
+    name: 'TYRE',
+    size: '3 MM TYRE',
+    color: 'T-1',
+    colorHex: '#4b5563',
+    price: 170,
+    unitPrice: 170,
+    stock: 0,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay B',
+    minStock: 5,
+    qrTag: 'QR-PRD-0020',
+    status: 'Low Stock',
+  },
+  {
+    sku: 'PRD-0030',
+    uniqueCode: 'PRD-0030',
+    name: 'TYRE',
+    size: '3 MM TYRE',
+    color: 'T-36',
+    colorHex: '#64748b',
+    price: 170,
+    unitPrice: 170,
+    stock: 0,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay B',
+    minStock: 5,
+    qrTag: 'QR-PRD-0030',
+    status: 'Low Stock',
+  },
+  {
+    sku: 'PRD-0002',
+    uniqueCode: 'PRD-0002',
+    name: 'TYRE',
+    size: '2.5 MM TYRE',
+    color: 'T-7',
+    colorHex: '#6b7280',
+    price: 140,
+    unitPrice: 140,
+    stock: 22,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay A',
+    minStock: 10,
+    qrTag: 'QR-PRD-0002',
+    status: 'Optimal',
+  },
+  {
+    sku: 'SP-RM-101',
+    uniqueCode: 'SP-RM-101',
+    name: 'HDPE Virgin Granules',
+    size: 'M60075 Grade',
+    color: 'Natural White',
+    colorHex: '#cbd5e1',
+    price: 92,
+    unitPrice: 92,
+    stock: 14200,
+    unit: 'KG',
+    uom: 'KG',
+    company: 'Siona Plasto',
+    category: 'Raw Material Polymer',
+    location: 'Vapi Plant - Silo 2',
+    minStock: 5000,
+    qrTag: 'QR-SP-8810',
+    status: 'Optimal',
+  },
+  {
+    sku: 'SP-FG-205',
+    uniqueCode: 'SP-FG-205',
+    name: 'Industrial Crates',
+    size: '600x400x320mm',
+    color: 'Royal Blue',
+    colorHex: '#1d4ed8',
+    price: 420,
+    unitPrice: 420,
+    stock: 3450,
+    unit: 'Units',
+    uom: 'Units',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay C',
+    minStock: 1000,
+    qrTag: 'QR-SP-8902',
+    status: 'Optimal',
+  },
+  {
+    sku: 'SP-FG-209',
+    uniqueCode: 'SP-FG-209',
+    name: '20L Jerrycan',
+    size: 'UN-Certified 20L',
+    color: 'Industrial Blue',
+    colorHex: '#2563eb',
+    price: 185,
+    unitPrice: 185,
+    stock: 620,
+    unit: 'Units',
+    uom: 'Units',
+    company: 'Siona Plasto',
+    category: 'Finished Goods',
+    location: 'Vapi Plant - Bay A',
+    minStock: 800,
+    qrTag: 'QR-SP-8911',
+    status: 'Low Stock',
+  },
 
   // Sudhi Impex (Global Agro Trade & Cashew Packaging)
-  { sku: 'SI-IMP-301', name: 'Raw Cashew Nuts in Shell (Benin Origin)', company: 'Sudhi Impex', category: 'Import Raw Consignment', stock: 18500, uom: 'KG', minStock: 6000, location: 'Nhava Sheva - Bonded Cold Store', unitPrice: 145, qrTag: 'QR-SI-3301', status: 'Optimal' },
-  { sku: 'SI-FG-304', name: 'Processed Cashew Kernels Grade W-320', company: 'Sudhi Impex', category: 'Export Finished Goods', stock: 6400, uom: 'KG', minStock: 2000, location: 'APMC Vashi Cold Hub - Rack 4', unitPrice: 680, qrTag: 'QR-SI-3304', status: 'Optimal' },
-  { sku: 'SI-PKG-308', name: '500g Stand-Up Nitrogen Foil Pouches', company: 'Sudhi Impex', category: 'Packaging Material', stock: 4200, uom: 'Units', minStock: 10000, location: 'Nhava Sheva - Pack Store', unitPrice: 8.5, qrTag: 'QR-SI-3308', status: 'Low Stock' },
-  { sku: 'SI-FG-312', name: 'Vacuum Tins Grade W-240 Premium (10KG)', company: 'Sudhi Impex', category: 'Export Finished Goods', stock: 320, uom: 'Tins', minStock: 150, location: 'APMC Vashi Export Bay', unitPrice: 7200, qrTag: 'QR-SI-3312', status: 'Optimal' },
+  {
+    sku: 'PRD-SI-001',
+    uniqueCode: 'PRD-SI-001',
+    name: 'CASHEW',
+    size: 'GRADE W-320',
+    color: 'White Whole',
+    colorHex: '#fef08a',
+    price: 680,
+    unitPrice: 680,
+    stock: 45,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Sudhi Impex',
+    category: 'Export Finished Goods',
+    location: 'Nhava Sheva - Cold Hub',
+    minStock: 10,
+    qrTag: 'QR-SI-3301',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-SI-002',
+    uniqueCode: 'PRD-SI-002',
+    name: 'CASHEW',
+    size: 'GRADE W-240',
+    color: 'Premium Jumbo',
+    colorHex: '#fde047',
+    price: 740,
+    unitPrice: 740,
+    stock: 18,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Sudhi Impex',
+    category: 'Export Finished Goods',
+    location: 'APMC Vashi Cold Hub',
+    minStock: 5,
+    qrTag: 'QR-SI-3304',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-SI-003',
+    uniqueCode: 'PRD-SI-003',
+    name: 'FOIL POUCH',
+    size: '500G NITRO',
+    color: 'Metallic Gold',
+    colorHex: '#fbbf24',
+    price: 12,
+    unitPrice: 12,
+    stock: 0,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Sudhi Impex',
+    category: 'Packaging',
+    location: 'Nhava Sheva - Pack Store',
+    minStock: 50,
+    qrTag: 'QR-SI-3308',
+    status: 'Low Stock',
+  },
+  {
+    sku: 'SI-FG-312',
+    uniqueCode: 'SI-FG-312',
+    name: 'VACUUM TINS',
+    size: '10KG EXPORT',
+    color: 'Silver Tin',
+    colorHex: '#94a3b8',
+    price: 7200,
+    unitPrice: 7200,
+    stock: 320,
+    unit: 'Tins',
+    uom: 'Tins',
+    company: 'Sudhi Impex',
+    category: 'Export Finished Goods',
+    location: 'APMC Vashi Export Bay',
+    minStock: 150,
+    qrTag: 'QR-SI-3312',
+    status: 'Optimal',
+  },
 
   // Swati Enterprise (Industrial Supplies & CNC Jobwork)
-  { sku: 'SE-IND-401', name: 'SS-304 Seamless Pipes 2-Inch Sch 40', company: 'Swati Enterprise', category: 'Industrial Supplies', stock: 1840, uom: 'Meters', minStock: 600, location: 'Ahmedabad Central Yard - Bay 1', unitPrice: 620, qrTag: 'QR-SE-5501', status: 'Optimal' },
-  { sku: 'SE-JW-405', name: 'Forged CNC Machined Hydraulic Flanges 4-Inch', company: 'Swati Enterprise', category: 'Jobwork Flanges', stock: 680, uom: 'Units', minStock: 300, location: 'Sanand Jobwork Depot - Rack B', unitPrice: 1450, qrTag: 'QR-SE-5505', status: 'Optimal' },
-  { sku: 'SE-FST-408', name: 'High-Tensile Hex Head Bolts M16x75 Gr 8.8', company: 'Swati Enterprise', category: 'Fasteners', stock: 850, uom: 'KG', minStock: 1200, location: 'Ahmedabad Yard - Bin 14', unitPrice: 110, qrTag: 'QR-SE-5508', status: 'Low Stock' },
-  { sku: 'SE-IND-412', name: 'Heavy Duty Soluble Cutting Coolant (210L)', company: 'Swati Enterprise', category: 'Shop-Floor Consumable', stock: 28, uom: 'Drums', minStock: 10, location: 'Ahmedabad Yard - Hazmat Bay', unitPrice: 14800, qrTag: 'QR-SE-5512', status: 'Optimal' },
+  {
+    sku: 'PRD-SE-001',
+    uniqueCode: 'PRD-SE-001',
+    name: 'SEAMLESS PIPE',
+    size: '2-INCH SCH40',
+    color: 'SS-304 Polished',
+    colorHex: '#94a3b8',
+    price: 620,
+    unitPrice: 620,
+    stock: 30,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Swati Enterprise',
+    category: 'Industrial Supplies',
+    location: 'Ahmedabad Yard - Bay 1',
+    minStock: 10,
+    qrTag: 'QR-SE-5501',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-SE-002',
+    uniqueCode: 'PRD-SE-002',
+    name: 'FLANGE',
+    size: '4-INCH ANSI 150#',
+    color: 'Machined Steel',
+    colorHex: '#64748b',
+    price: 1450,
+    unitPrice: 1450,
+    stock: 15,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Swati Enterprise',
+    category: 'Jobwork Flanges',
+    location: 'Sanand Jobwork Depot',
+    minStock: 5,
+    qrTag: 'QR-SE-5505',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-SE-003',
+    uniqueCode: 'PRD-SE-003',
+    name: 'HEX BOLTS',
+    size: 'M16x75 GR8.8',
+    color: 'Yellow Zinc',
+    colorHex: '#eab308',
+    price: 110,
+    unitPrice: 110,
+    stock: 0,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Swati Enterprise',
+    category: 'Fasteners',
+    location: 'Ahmedabad Yard - Bin 14',
+    minStock: 20,
+    qrTag: 'QR-SE-5508',
+    status: 'Low Stock',
+  },
 
   // Vilaano (Luxury Retail, Fashion & Lifestyle)
-  { sku: 'VL-APP-801', name: 'Vilaano Cashmere-Blend Tailored Overcoat', company: 'Vilaano', category: 'Winter Apparel', stock: 480, uom: 'Units', minStock: 150, location: 'Bandra Flagship Vault - Rack A1', unitPrice: 12500, qrTag: 'QR-VL-9101', status: 'Optimal' },
-  { sku: 'VL-FTW-804', name: 'Italian Calfskin Chelsea Boots (Cognac)', company: 'Vilaano', category: 'Footwear', stock: 210, uom: 'Pairs', minStock: 100, location: 'Palladium Boutique Vault', unitPrice: 8900, qrTag: 'QR-VL-9104', status: 'Optimal' },
-  { sku: 'VL-LXR-808', name: 'Artisan Eau de Parfum 100ml (Oud Bergamot)', company: 'Vilaano', category: 'Fragrance & Beauty', stock: 95, uom: 'Bottles', minStock: 250, location: 'Bhiwandi E-Commerce DC - Sec 3', unitPrice: 4200, qrTag: 'QR-VL-9108', status: 'Low Stock' },
-  { sku: 'VL-ACC-812', name: 'Full-Grain Leather Weekender Duffle Bag', company: 'Vilaano', category: 'Leather Goods', stock: 310, uom: 'Units', minStock: 80, location: 'Bandra Flagship Vault - Rack C2', unitPrice: 7800, qrTag: 'QR-VL-9112', status: 'Optimal' },
+  {
+    sku: 'PRD-VL-001',
+    uniqueCode: 'PRD-VL-001',
+    name: 'OVERCOAT',
+    size: '40 REGULAR',
+    color: 'Camel Tan',
+    colorHex: '#d97706',
+    price: 12500,
+    unitPrice: 12500,
+    stock: 14,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Vilaano',
+    category: 'Winter Apparel',
+    location: 'Bandra Flagship Vault',
+    minStock: 5,
+    qrTag: 'QR-VL-9101',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-VL-002',
+    uniqueCode: 'PRD-VL-002',
+    name: 'CHELSEA BOOTS',
+    size: '42 EU',
+    color: 'Cognac Leather',
+    colorHex: '#9a3412',
+    price: 8900,
+    unitPrice: 8900,
+    stock: 8,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Vilaano',
+    category: 'Footwear',
+    location: 'Palladium Boutique Vault',
+    minStock: 3,
+    qrTag: 'QR-VL-9104',
+    status: 'Optimal',
+  },
+  {
+    sku: 'PRD-VL-003',
+    uniqueCode: 'PRD-VL-003',
+    name: 'DUFFLE BAG',
+    size: '45L WEEKENDER',
+    color: 'Espresso Brown',
+    colorHex: '#451a03',
+    price: 7800,
+    unitPrice: 7800,
+    stock: 0,
+    unit: 'PAC',
+    uom: 'PAC',
+    company: 'Vilaano',
+    category: 'Leather Goods',
+    location: 'Bandra Flagship Vault',
+    minStock: 2,
+    qrTag: 'QR-VL-9112',
+    status: 'Low Stock',
+  },
 ];
 
 const INITIAL_STOCK_IN = [
@@ -743,6 +1074,7 @@ export default function App() {
   const [activeNav, setActiveNav] = useState('Dashboard');
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [toast, setToast] = useState(null);
 
   // Operational states
@@ -779,6 +1111,39 @@ export default function App() {
   const [stockItems, setStockItems] = useState(INITIAL_STOCK_LIST);
   const [stockInRecords, setStockInRecords] = useState(INITIAL_STOCK_IN);
   const [stockOutRecords, setStockOutRecords] = useState(INITIAL_STOCK_OUT);
+
+  // Full Stock List & QR Modal States (matching Image 2 & Image 3)
+  const [selectedStockCodes, setSelectedStockCodes] = useState<string[]>([]);
+  const [selectedQrItem, setSelectedQrItem] = useState<any>(null);
+  const [qrCopies, setQrCopies] = useState<number>(1);
+  const [recordStockInOnPrint, setRecordStockInOnPrint] = useState<boolean>(true);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+
+  // Dropdown filter states for Full Stock List (Image 3)
+  const [stockFilterProduct, setStockFilterProduct] = useState('All');
+  const [stockFilterSize, setStockFilterSize] = useState('All');
+  const [stockFilterColor, setStockFilterColor] = useState('All');
+  const [stockFilterStock, setStockFilterStock] = useState('All');
+  const [stockFilterUnit, setStockFilterUnit] = useState('All');
+
+  // Generate QR Code data URL whenever selectedQrItem changes
+  useEffect(() => {
+    if (selectedQrItem) {
+      const payload = JSON.stringify({
+        uniqueCode: selectedQrItem.uniqueCode || selectedQrItem.sku,
+        name: selectedQrItem.name,
+        size: selectedQrItem.size,
+        color: selectedQrItem.color,
+        price: selectedQrItem.price,
+        company: selectedQrItem.company,
+      });
+      QRCode.toDataURL(payload, { width: 220, margin: 1, errorCorrectionLevel: 'M' })
+        .then((url) => setQrDataUrl(url))
+        .catch((err) => console.error('Failed to generate QR Code:', err));
+    } else {
+      setQrDataUrl('');
+    }
+  }, [selectedQrItem]);
 
   // Stock In Modal State
   const [isStockInModalOpen, setIsStockInModalOpen] = useState(false);
@@ -1310,6 +1675,68 @@ export default function App() {
     triggerToast(`Stock Out: -${qty} ${matchedItem.uom} dispatched from ${matchedItem.name}`);
   };
 
+  // Handle QR Label Print with Stock IN (Image 2)
+  const handlePrintAndAddStockIn = () => {
+    if (!selectedQrItem) return;
+    const copies = qrCopies || 1;
+    const uom = selectedQrItem.unit || selectedQrItem.uom || 'PAC';
+    const uniqueCode = selectedQrItem.uniqueCode || selectedQrItem.sku;
+
+    if (recordStockInOnPrint) {
+      // 1. Update stock count in state
+      setStockItems((prev) =>
+        prev.map((item) => {
+          if (
+            (item.uniqueCode && item.uniqueCode === uniqueCode) ||
+            (item.sku && item.sku === uniqueCode)
+          ) {
+            const newStock = item.stock + copies;
+            return {
+              ...item,
+              stock: newStock,
+              status: newStock > (item.minStock || 0) ? 'Optimal' : item.status,
+            };
+          }
+          return item;
+        })
+      );
+
+      // 2. Add Stock IN inward entry
+      const newEntry = {
+        id: `INW-PRN-${Date.now().toString().slice(-4)}`,
+        date: new Date().toISOString().split('T')[0],
+        company: selectedQrItem.company,
+        sku: uniqueCode,
+        itemName: `${selectedQrItem.name} (${selectedQrItem.size}, ${selectedQrItem.color})`,
+        quantity: copies,
+        uom: uom,
+        supplier: 'QR Print Automation (Inward)',
+        referenceNo: `QR-PRN-${uniqueCode}`,
+        location: selectedQrItem.location || 'Warehouse Main',
+        receivedBy: 'Deepak Sharma',
+        status: 'Auto Inward Recorded',
+      };
+      setStockInRecords((prev) => [newEntry, ...prev]);
+
+      triggerToast(`Stock IN (+${copies} ${uom}) recorded & QR Label printed for ${uniqueCode}!`);
+    } else {
+      triggerToast(`Printed ${copies} QR Label(s) for ${uniqueCode}!`);
+    }
+
+    setSelectedQrItem(null);
+    window.print();
+  };
+
+  const handlePrintAllQR = (count: number) => {
+    triggerToast(`Initiating batch print for ${count} product QR labels...`);
+    window.print();
+  };
+
+  const handleDeleteStockItem = (code: string) => {
+    setStockItems((prev) => prev.filter((i) => i.uniqueCode !== code && i.sku !== code));
+    triggerToast(`Removed product ${code} from stock list`);
+  };
+
   const handleToggleRight = (roleName, modId) => {
     setRightsMatrix((prev) => ({
       ...prev,
@@ -1362,11 +1789,13 @@ export default function App() {
 
       {/* ================= LEFT SIDEBAR ================= */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-white text-slate-700 flex flex-col justify-between transition-transform duration-200 ease-out border-r border-slate-200/80 shrink-0 ${
+        className={`fixed lg:sticky top-0 left-0 z-40 h-screen bg-white text-slate-700 flex flex-col justify-between transition-all duration-200 ease-out border-r border-slate-200/80 shrink-0 ${
+          sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-r-0 lg:p-0' : 'w-64'
+        } ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden w-64">
           {/* Top Logo / Selected Company Brand Row (NEVER ZipERP 360) */}
           <div className="h-14 px-4 flex items-center justify-between border-b border-slate-100">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -1386,12 +1815,22 @@ export default function App() {
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-700"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(true)}
+                title="Collapse sidebar inside"
+                className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Company Switcher Card */}
@@ -1610,6 +2049,17 @@ export default function App() {
             >
               <Menu className="w-4 h-4" />
             </button>
+            {sidebarCollapsed && (
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(false)}
+                title="Expand sidebar"
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4 text-slate-500" />
+                <span>Expand Sidebar</span>
+              </button>
+            )}
             <div className="flex-1 relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -2073,50 +2523,59 @@ export default function App() {
               With in-bar Company Filter Option (in Siona, Sudhi, Swati, Vilaano)
              ========================================================================= */}
           {activeNav === 'Inventory' && (() => {
-            const currentComp = inventoryCompanyFilter;
+            const currentComp = selectedCompany;
             const isAll = currentComp === 'All';
-
-            // Filter items based on active company filter
-            const displayedStockItems = stockItems.filter(item => {
-              const matchesCompany = isAll || item.company === currentComp;
-              const s = inventorySearch.toLowerCase();
-              const matchesSearch =
-                inventorySearch === '' ||
-                item.name.toLowerCase().includes(s) ||
-                item.sku.toLowerCase().includes(s) ||
-                item.category.toLowerCase().includes(s) ||
-                item.location.toLowerCase().includes(s);
-              return matchesCompany && matchesSearch;
-            });
-
-            const displayedStockIn = stockInRecords.filter(r => {
-              const matchesCompany = isAll || r.company === currentComp;
-              const s = inventorySearch.toLowerCase();
-              const matchesSearch =
-                inventorySearch === '' ||
-                r.itemName.toLowerCase().includes(s) ||
-                r.sku.toLowerCase().includes(s) ||
-                r.supplier.toLowerCase().includes(s) ||
-                r.referenceNo.toLowerCase().includes(s);
-              return matchesCompany && matchesSearch;
-            });
-
-            const displayedStockOut = stockOutRecords.filter(r => {
-              const matchesCompany = isAll || r.company === currentComp;
-              const s = inventorySearch.toLowerCase();
-              const matchesSearch =
-                inventorySearch === '' ||
-                r.itemName.toLowerCase().includes(s) ||
-                r.sku.toLowerCase().includes(s) ||
-                r.destination.toLowerCase().includes(s) ||
-                r.referenceNo.toLowerCase().includes(s);
-              return matchesCompany && matchesSearch;
-            });
 
             const companyScopedItems = isAll ? stockItems : stockItems.filter(i => i.company === currentComp);
             const companyScopedIn = isAll ? stockInRecords : stockInRecords.filter(r => r.company === currentComp);
             const companyScopedOut = isAll ? stockOutRecords : stockOutRecords.filter(r => r.company === currentComp);
-            const lowStockCount = companyScopedItems.filter(i => i.status === 'Low Stock').length;
+            const lowStockCount = companyScopedItems.filter(i => i.status === 'Low Stock' || i.stock <= 0).length;
+
+            const uniqueProducts = Array.from(new Set(companyScopedItems.map((i) => i.name).filter(Boolean)));
+            const uniqueSizes = Array.from(new Set(companyScopedItems.map((i) => i.size).filter(Boolean)));
+            const uniqueColors = Array.from(new Set(companyScopedItems.map((i) => i.color).filter(Boolean)));
+
+            const filteredStockItems = companyScopedItems.filter((item) => {
+              if (stockFilterProduct !== 'All' && item.name !== stockFilterProduct) return false;
+              if (stockFilterSize !== 'All' && item.size !== stockFilterSize) return false;
+              if (stockFilterColor !== 'All' && item.color !== stockFilterColor) return false;
+              if (stockFilterStock === 'in_stock' && item.stock <= 0) return false;
+              if (stockFilterStock === 'out_of_stock' && item.stock > 0) return false;
+              if (stockFilterUnit !== 'All' && item.unit !== stockFilterUnit && item.uom !== stockFilterUnit) return false;
+              if (inventorySearch.trim()) {
+                const s = inventorySearch.toLowerCase();
+                const matches =
+                  item.name.toLowerCase().includes(s) ||
+                  (item.uniqueCode && item.uniqueCode.toLowerCase().includes(s)) ||
+                  (item.sku && item.sku.toLowerCase().includes(s)) ||
+                  (item.size && item.size.toLowerCase().includes(s)) ||
+                  (item.color && item.color.toLowerCase().includes(s));
+                if (!matches) return false;
+              }
+              return true;
+            });
+
+            const displayedStockIn = companyScopedIn.filter(r => {
+              const s = inventorySearch.toLowerCase();
+              return (
+                inventorySearch === '' ||
+                r.itemName.toLowerCase().includes(s) ||
+                r.sku.toLowerCase().includes(s) ||
+                r.supplier.toLowerCase().includes(s) ||
+                r.referenceNo.toLowerCase().includes(s)
+              );
+            });
+
+            const displayedStockOut = companyScopedOut.filter(r => {
+              const s = inventorySearch.toLowerCase();
+              return (
+                inventorySearch === '' ||
+                r.itemName.toLowerCase().includes(s) ||
+                r.sku.toLowerCase().includes(s) ||
+                r.destination.toLowerCase().includes(s) ||
+                r.referenceNo.toLowerCase().includes(s)
+              );
+            });
 
             return (
               <div className="space-y-4 animate-fade-in">
@@ -2266,28 +2725,7 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Middle: Company Filter Option (Yellow highlighted area in user screenshot) */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100/90 px-3 py-1.5 rounded-xl border border-slate-200 transition-colors shadow-2xs">
-                        <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
-                          Company Filter:
-                        </span>
-                        <select
-                          value={inventoryCompanyFilter}
-                          onChange={(e) => setInventoryCompanyFilter(e.target.value)}
-                          className="text-xs font-bold text-slate-800 bg-transparent border-0 focus:outline-none cursor-pointer pr-1"
-                        >
-                          <option value="All">All Companies ({stockItems.length} SKUs)</option>
-                          <option value="Siona Plasto">Siona Plasto (4 SKUs)</option>
-                          <option value="Sudhi Impex">Sudhi Impex (4 SKUs)</option>
-                          <option value="Swati Enterprise">Swati Enterprise (4 SKUs)</option>
-                          <option value="Vilaano">Vilaano (4 SKUs)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Right: Search Input */}
+                    {/* Right: Search Input (for Stock In / Stock Out tabs) */}
                     <div className="relative w-full sm:w-64">
                       <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                       <input
@@ -2302,83 +2740,271 @@ export default function App() {
                 </div>
 
                 {/* =========================================================================
-                    SUB-VIEW 1: STOCK LIST
+                    SUB-VIEW 1: FULL STOCK LIST (Matching Image 3)
                    ========================================================================= */}
                 {inventoryTab === 'StockList' && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                        <tr>
-                          <th className="py-3 px-3">SKU Code</th>
-                          <th className="py-3 px-3 min-w-[200px]">Item Name & Category</th>
-                          <th className="py-3 px-3">Company</th>
-                          <th className="py-3 px-3">Warehouse Location</th>
-                          <th className="py-3 px-3">Current Stock</th>
-                          <th className="py-3 px-3">Unit Valuation</th>
-                          <th className="py-3 px-3">QR Batch Tag</th>
-                          <th className="py-3 px-3">Stock Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {displayedStockItems.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                    {/* Header matching Image 3: Full Stock List, Print All QR, Total: X */}
+                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5">
+                        <Package className="w-6 h-6 text-indigo-600" />
+                        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Full Stock List</h2>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => handlePrintAllQR(filteredStockItems.length)}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                        >
+                          <Printer className="w-4 h-4" />
+                          <span>Print All QR ({filteredStockItems.length})</span>
+                        </button>
+                        <div className="px-3.5 py-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold">
+                          Total: {companyScopedItems.length}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Search & Filters Bar matching Image 3 */}
+                    <div className="p-4 bg-slate-50/60 border-b border-slate-100 space-y-3">
+                      {/* Search Bar */}
+                      <div className="relative">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          placeholder="Search by Product Name, Unique Code, Size, or Color..."
+                          value={inventorySearch}
+                          onChange={(e) => setInventorySearch(e.target.value)}
+                          className="w-full pl-10 pr-20 py-2.5 text-xs bg-white rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs text-slate-800"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
+                          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">EN</span>
+                          <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                        </div>
+                      </div>
+
+                      {/* Filter Row with Dropdowns */}
+                      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Product Filter */}
+                          <div className="relative">
+                            <select
+                              value={stockFilterProduct}
+                              onChange={(e) => setStockFilterProduct(e.target.value)}
+                              className="appearance-none pl-3 pr-7 py-1.5 text-xs font-medium bg-white rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer shadow-2xs"
+                            >
+                              <option value="All">PRODUCT: All Products ({uniqueProducts.length})</option>
+                              {uniqueProducts.map((p) => (
+                                <option key={p} value={p}>PRODUCT: {p}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+
+                          {/* Size Filter */}
+                          <div className="relative">
+                            <select
+                              value={stockFilterSize}
+                              onChange={(e) => setStockFilterSize(e.target.value)}
+                              className="appearance-none pl-3 pr-7 py-1.5 text-xs font-medium bg-white rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer shadow-2xs"
+                            >
+                              <option value="All">SIZE: All Sizes ({uniqueSizes.length})</option>
+                              {uniqueSizes.map((s) => (
+                                <option key={s} value={s}>SIZE: {s}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+
+                          {/* Color Filter */}
+                          <div className="relative">
+                            <select
+                              value={stockFilterColor}
+                              onChange={(e) => setStockFilterColor(e.target.value)}
+                              className="appearance-none pl-3 pr-7 py-1.5 text-xs font-medium bg-white rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer shadow-2xs"
+                            >
+                              <option value="All">COLOR: All Colors ({uniqueColors.length})</option>
+                              {uniqueColors.map((c) => (
+                                <option key={c} value={c}>COLOR: {c}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+
+                          {/* Stock Filter */}
+                          <div className="relative">
+                            <select
+                              value={stockFilterStock}
+                              onChange={(e) => setStockFilterStock(e.target.value)}
+                              className="appearance-none pl-3 pr-7 py-1.5 text-xs font-medium bg-white rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer shadow-2xs"
+                            >
+                              <option value="All">STOCK: All Stock</option>
+                              <option value="in_stock">STOCK: In Stock</option>
+                              <option value="out_of_stock">STOCK: Out of Stock</option>
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+
+                          {/* Unit Filter */}
+                          <div className="relative">
+                            <select
+                              value={stockFilterUnit}
+                              onChange={(e) => setStockFilterUnit(e.target.value)}
+                              className="appearance-none pl-3 pr-7 py-1.5 text-xs font-medium bg-white rounded-full border border-slate-200 text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer shadow-2xs"
+                            >
+                              <option value="All">UNIT: All Units</option>
+                              <option value="PAC">UNIT: PAC</option>
+                              <option value="KG">UNIT: KG</option>
+                              <option value="Units">UNIT: Units</option>
+                              <option value="Meters">UNIT: Meters</option>
+                              <option value="Pairs">UNIT: Pairs</option>
+                              <option value="Tins">UNIT: Tins</option>
+                            </select>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        <div className="text-xs text-slate-500 font-medium">
+                          Showing <span className="font-bold text-slate-900">{filteredStockItems.length}</span> of {companyScopedItems.length} products
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Table Columns matching Image 3 */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                           <tr>
-                            <td colSpan={8} className="py-8 text-center text-slate-400">
-                              No inventory items found matching the filter.
-                            </td>
+                            <th className="py-3 px-4 w-10">
+                              <input
+                                type="checkbox"
+                                checked={filteredStockItems.length > 0 && selectedStockCodes.length === filteredStockItems.length}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedStockCodes(filteredStockItems.map((i) => i.uniqueCode || i.sku));
+                                  } else {
+                                    setSelectedStockCodes([]);
+                                  }
+                                }}
+                                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                              />
+                            </th>
+                            <th className="py-3 px-4 font-bold">PRODUCT NAME</th>
+                            <th className="py-3 px-4 font-bold">UNIQUE CODE</th>
+                            <th className="py-3 px-4 font-bold">SIZE</th>
+                            <th className="py-3 px-4 font-bold">COLOR</th>
+                            <th className="py-3 px-4 font-bold">PRICE (₹)</th>
+                            <th className="py-3 px-4 font-bold">CURRENT STOCK</th>
+                            <th className="py-3 px-4 font-bold text-center">QR &amp; ACTIONS</th>
                           </tr>
-                        ) : (
-                          displayedStockItems.map((item) => (
-                            <tr key={item.sku} className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3 px-3 font-mono font-bold text-slate-900 whitespace-nowrap">
-                                {item.sku}
-                              </td>
-                              <td className="py-3 px-3">
-                                <div className="font-semibold text-slate-900">{item.name}</div>
-                                <div className="text-[11px] text-slate-500">{item.category}</div>
-                              </td>
-                              <td className="py-3 px-3 whitespace-nowrap">
-                                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getCompanyBadgeStyle(item.company)}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${getCompanyDotColor(item.company)}`} />
-                                  {item.company}
-                                </span>
-                              </td>
-                              <td className="py-3 px-3 text-slate-600 font-medium whitespace-nowrap">
-                                {item.location}
-                              </td>
-                              <td className="py-3 px-3 whitespace-nowrap">
-                                <div className="text-sm font-bold text-slate-900">
-                                  {item.stock.toLocaleString()} <span className="text-xs text-slate-500 font-normal">{item.uom}</span>
-                                </div>
-                                <div className="text-[10px] text-slate-400">
-                                  Min: {item.minStock.toLocaleString()} {item.uom}
-                                </div>
-                              </td>
-                              <td className="py-3 px-3 whitespace-nowrap">
-                                <div className="font-bold text-slate-800">₹{(item.stock * item.unitPrice).toLocaleString()}</div>
-                                <div className="text-[10px] text-slate-500">₹{item.unitPrice}/{item.uom}</div>
-                              </td>
-                              <td className="py-3 px-3 whitespace-nowrap">
-                                <span className="inline-flex items-center gap-1 font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded text-slate-700 border border-slate-200">
-                                  <QrCode className="w-3 h-3 text-slate-500" />
-                                  {item.qrTag}
-                                </span>
-                              </td>
-                              <td className="py-3 px-3 whitespace-nowrap">
-                                <span
-                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                    item.status === 'Optimal'
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                      : 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
-                                  }`}
-                                >
-                                  {item.status}
-                                </span>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filteredStockItems.length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="py-12 text-center text-slate-400">
+                                No products found matching your search and filter criteria.
                               </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                          ) : (
+                            filteredStockItems.map((item) => {
+                              const code = item.uniqueCode || item.sku;
+                              const isChecked = selectedStockCodes.includes(code);
+                              return (
+                                <tr key={code} className={`hover:bg-slate-50/80 transition-colors ${isChecked ? 'bg-indigo-50/30' : ''}`}>
+                                  <td className="py-3.5 px-4">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {
+                                        setSelectedStockCodes((prev) =>
+                                          prev.includes(code)
+                                            ? prev.filter((c) => c !== code)
+                                            : [...prev, code]
+                                        );
+                                      }}
+                                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shrink-0">
+                                        <Package className="w-4 h-4" />
+                                      </div>
+                                      <span className="font-bold text-slate-900 tracking-tight">{item.name}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 px-4 font-mono">
+                                    <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200/80">
+                                      {item.uniqueCode || item.sku}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80">
+                                      {item.size || 'Standard'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                                      <span
+                                        className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
+                                        style={{ backgroundColor: item.colorHex || '#64748b' }}
+                                      />
+                                      <span>{item.color || 'Standard'}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <span className="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold text-xs border border-blue-100">
+                                      ₹{item.price || item.unitPrice}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    {item.stock > 0 ? (
+                                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
+                                        {item.stock} {item.unit || item.uom}
+                                      </span>
+                                    ) : (
+                                      <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 font-bold text-xs border border-red-200">
+                                        0 {item.unit || item.uom}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedQrItem(item);
+                                          setQrCopies(1);
+                                          setRecordStockInOnPrint(true);
+                                        }}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors cursor-pointer"
+                                      >
+                                        <QrCode className="w-3.5 h-3.5 text-blue-600" />
+                                        <span>QR</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => triggerToast(`Edit ${code}`)}
+                                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                                      >
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteStockItem(code)}
+                                        className="p-1 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
 
@@ -2822,6 +3448,109 @@ export default function App() {
                           </button>
                         </div>
                       </form>
+                    </div>
+                  </div>
+                )}
+
+                {/* =========================================================================
+                    MODAL: QR LABEL & PRINT WITH STOCK IN (Matching Image 2)
+                   ========================================================================= */}
+                {selectedQrItem && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
+                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
+                      {/* Header matching Image 2 */}
+                      <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/80 text-blue-600 flex items-center justify-center shrink-0">
+                            <QrCode className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                              QR Label — {selectedQrItem.uniqueCode || selectedQrItem.sku}
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-0.5 leading-snug">
+                              Product details are embedded inside each QR code — only Size &amp; Color are printed below.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQrItem(null)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* Modal Content matching Image 2 */}
+                      <div className="p-6 space-y-4">
+                        {/* Copies Row */}
+                        <div className="flex items-center gap-3 text-xs text-slate-700">
+                          <span className="font-semibold text-slate-600">Copies per product:</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={qrCopies}
+                            onChange={(e) => setQrCopies(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-20 px-3 py-1.5 text-center text-xs font-bold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                          <span className="text-slate-400 text-[11px]">
+                            (Total {qrCopies} labels • QR: 30mm × 30mm)
+                          </span>
+                        </div>
+
+                        {/* Action Row matching Image 2: Checkbox + Emerald Button */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                          <label className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-800 text-xs font-semibold cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={recordStockInOnPrint}
+                              onChange={(e) => setRecordStockInOnPrint(e.target.checked)}
+                              className="w-4 h-4 text-emerald-600 rounded border-emerald-300 focus:ring-emerald-500"
+                            />
+                            <span>
+                              Record as Stock IN (+{qrCopies} {selectedQrItem.unit || selectedQrItem.uom || 'PAC'} on print)
+                            </span>
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={handlePrintAndAddStockIn}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                          >
+                            <Printer className="w-4 h-4" />
+                            <span>Print &amp; Add to Stock IN (+{qrCopies})</span>
+                          </button>
+                        </div>
+
+                        {/* QR Card Preview Container (Dashed Border) matching Image 2 */}
+                        <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-2xl bg-white max-w-xs mx-auto">
+                          {qrDataUrl ? (
+                            <img
+                              src={qrDataUrl}
+                              alt={`QR for ${selectedQrItem.uniqueCode || selectedQrItem.sku}`}
+                              className="w-44 h-44 object-contain"
+                            />
+                          ) : (
+                            <div className="w-44 h-44 flex items-center justify-center bg-slate-50 text-slate-400 font-mono text-xs">
+                              Generating QR...
+                            </div>
+                          )}
+
+                          <div className="text-xs font-bold text-slate-800 mt-3 text-center tracking-wide">
+                            {selectedQrItem.size || 'Standard'}, {selectedQrItem.color || 'Standard'}
+                          </div>
+
+                          <a
+                            href={qrDataUrl}
+                            download={`QR-${selectedQrItem.uniqueCode || selectedQrItem.sku}.png`}
+                            className="mt-3.5 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download PNG</span>
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
