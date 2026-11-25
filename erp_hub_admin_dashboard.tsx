@@ -17,6 +17,7 @@ import {
   Shield,
   Check,
   ArrowUpRight,
+  ArrowDownLeft,
   Calendar,
   Lock,
   Unlock,
