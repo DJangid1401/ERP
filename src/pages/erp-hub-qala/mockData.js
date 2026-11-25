@@ -21,7 +21,8 @@ import {
   Wallet,
   Landmark,
   Percent,
-  Receipt
+  Receipt,
+  Factory
 } from 'lucide-react';
 
 // --- Companies Metadata (Multi-Company ERP) ---
