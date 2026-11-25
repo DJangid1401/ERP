@@ -90,6 +90,16 @@ const COMPANIES = [
 // --- Workspaces For Operating Companies (Includes Task Management) ---
 const WORKSPACES_CONFIG = [
   {
+    id: 'Dashboard',
+    title: 'Dashboard',
+    desc: 'Company executive overview & live KPI metrics.',
+    icon: LayoutDashboard,
+    gradient: 'from-blue-500/10 via-blue-50/40 to-white',
+    border: 'border-blue-100 hover:border-blue-300',
+    iconBg: 'bg-blue-600 text-white',
+    accentText: 'text-blue-700',
+  },
+  {
     id: 'Task',
     title: 'Tasks',
     desc: 'Group-wide operations, deliverables, and team assignments.',
@@ -1142,8 +1152,63 @@ export default function App() {
   const [selectedStockCodes, setSelectedStockCodes] = useState<string[]>([]);
   const [selectedQrItem, setSelectedQrItem] = useState<any>(null);
   const [qrCopies, setQrCopies] = useState<number>(1);
-  const [recordStockInOnPrint, setRecordStockInOnPrint] = useState<boolean>(false);
+  const [recordStockInOnPrint, setRecordStockInOnPrint] = useState<boolean>(true);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [editingStockItem, setEditingStockItem] = useState<any>(null);
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [listeningField, setListeningField] = useState<string | null>(null);
+
+  // Global Speech Recognition / Voice Addon Handler (Point 6)
+  const startVoiceInput = (fieldName: string, onResult: (text: string) => void) => {
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      triggerToast('Voice recognition not supported on this browser. Please use Google Chrome or Edge.');
+      return;
+    }
+
+    try {
+      if (listeningField === fieldName) {
+        setListeningField(null);
+        return;
+      }
+
+      const recognition = new SpeechRec();
+      recognition.lang = 'en-IN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      setListeningField(fieldName);
+      triggerToast(`Listening for ${fieldName}... Speak now!`);
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript;
+        if (transcript) {
+          onResult(transcript.trim());
+          triggerToast(`Recognized: "${transcript.trim()}"`);
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          triggerToast('Microphone access denied. Please allow microphone access in browser.');
+        } else if (event.error !== 'no-speech') {
+          triggerToast(`Voice error: ${event.error}`);
+        }
+        setListeningField(null);
+      };
+
+      recognition.onend = () => {
+        setListeningField(null);
+      };
+
+      recognition.start();
+    } catch (err: any) {
+      console.error('Speech recognition exception:', err);
+      triggerToast('Microphone currently unavailable.');
+      setListeningField(null);
+    }
+  };
 
   // Dropdown filter states for Full Stock List (Image 3)
   const [stockFilterProduct, setStockFilterProduct] = useState('All');
@@ -1196,18 +1261,19 @@ export default function App() {
   const [stockOutPacQty, setStockOutPacQty] = useState<number>(1);
   const [stockOutPackets, setStockOutPackets] = useState<number>(1);
   const [stockOutDirectWeight, setStockOutDirectWeight] = useState<number>(1);
-  const [stockOutUnitPrice, setStockOutUnitPrice] = useState<number>(140);
+  const [stockOutUnitPrice, setStockOutUnitPrice] = useState<number | string>(140);
   const [stockOutSearchOpen, setStockOutSearchOpen] = useState(false);
 
+  // Point 1: When Unique Product Code is cleared or empty, currentStockOutItem becomes null (no TYRE fallback)
   const currentStockOutItem = useMemo(() => {
+    const code = stockOutProductCode.trim().toLowerCase();
+    if (!code) return null;
     return (
       stockItems.find(
         (i) =>
-          i.uniqueCode?.toLowerCase() === stockOutProductCode.trim().toLowerCase() ||
-          i.sku?.toLowerCase() === stockOutProductCode.trim().toLowerCase()
-      ) ||
-      stockItems.find((i) => i.uniqueCode === 'PRD-0013') ||
-      stockItems[0]
+          i.uniqueCode?.toLowerCase() === code ||
+          i.sku?.toLowerCase() === code
+      ) || null
     );
   }, [stockItems, stockOutProductCode]);
 
@@ -1260,17 +1326,14 @@ export default function App() {
     return COMPANIES.find((c) => c.id === selectedCompany) || COMPANIES[0];
   }, [selectedCompany]);
 
-  // When switching company, ensure 'All' defaults to Dashboard and specific company defaults to Workspaces
+  // When switching company, ensure 'All' and subsidiaries have access to Dashboard
   useEffect(() => {
     if (selectedCompany === 'All') {
-      if (activeNav === 'Workspaces' || WORKSPACES_CONFIG.some((w) => w.id === activeNav)) {
+      if (activeNav === 'Workspaces') {
         setActiveNav('Dashboard');
       }
       setInventoryCompanyFilter('All');
     } else {
-      if (activeNav === 'Dashboard') {
-        setActiveNav('Workspaces');
-      }
       setInventoryCompanyFilter(selectedCompany);
     }
   }, [selectedCompany]);
@@ -1300,8 +1363,8 @@ export default function App() {
       setActiveNav('Dashboard');
       triggerToast('Switched to Central Group Dashboard (All Companies)');
     } else {
-      setActiveNav('Workspaces');
-      triggerToast(`Entered ${companyId} Operational Workspace`);
+      setActiveNav('Dashboard');
+      triggerToast(`Entered ${companyId} Dashboard`);
     }
   };
 
@@ -1986,56 +2049,215 @@ export default function App() {
     triggerToast(`Stock Out: -${qtyDisplay} • ₹${totalAmt} processed!`);
   };
 
-  // Handle QR Label Print with Stock IN (Image 2)
+  // Handle QR Label Print with Stock IN (Point 2: Only print exact copies of QR & add to Stock IN)
   const handlePrintAndAddStockIn = () => {
     if (!selectedQrItem) return;
-    const copies = qrCopies || 1;
+    const copies = Math.max(1, Number(qrCopies) || 1);
     const uom = selectedQrItem.unit || selectedQrItem.uom || 'PAC';
     const uniqueCode = selectedQrItem.uniqueCode || selectedQrItem.sku;
 
-    if (recordStockInOnPrint) {
-      // 1. Update stock count in state
-      setStockItems((prev) =>
-        prev.map((item) => {
-          if (
-            (item.uniqueCode && item.uniqueCode === uniqueCode) ||
-            (item.sku && item.sku === uniqueCode)
-          ) {
-            const newStock = item.stock + copies;
-            return {
-              ...item,
-              stock: newStock,
-              status: newStock > (item.minStock || 0) ? 'Optimal' : item.status,
+    // 1. Update stock count in state (+copies)
+    setStockItems((prev) =>
+      prev.map((item) => {
+        if (
+          (item.uniqueCode && item.uniqueCode === uniqueCode) ||
+          (item.sku && item.sku === uniqueCode)
+        ) {
+          const newStock = item.stock + copies;
+          return {
+            ...item,
+            stock: newStock,
+            status: newStock > (item.minStock || 0) ? 'Optimal' : item.status,
+          };
+        }
+        return item;
+      })
+    );
+
+    // 2. Add Stock IN inward entry
+    const newEntry = {
+      id: `INW-PRN-${Date.now().toString().slice(-4)}`,
+      date: new Date().toISOString().split('T')[0],
+      company: selectedQrItem.company,
+      sku: uniqueCode,
+      itemName: `${selectedQrItem.name} (${selectedQrItem.size || 'Standard'}, ${selectedQrItem.color || 'Standard'})`,
+      quantity: copies,
+      uom: uom,
+      supplier: 'QR Print Automation (Inward Batch)',
+      referenceNo: `QR-PRN-${uniqueCode}`,
+      location: selectedQrItem.location || 'Warehouse Main',
+      receivedBy: 'Deepak Sharma',
+      status: 'Auto Inward Recorded',
+    };
+    setStockInRecords((prev) => [newEntry, ...prev]);
+
+    triggerToast(`Stock IN (+${copies} ${uom}) recorded & ${copies} QR Label(s) printing!`);
+
+    // 3. Print ONLY the exact number of QR stickers (not entire dashboard)
+    const printWindow = window.open('', '_blank', 'width=750,height=700');
+    if (printWindow) {
+      const labelsHtml = Array.from({ length: copies }, (_, index) => `
+        <div class="qr-label-card">
+          <div class="qr-company">${selectedQrItem.company || 'ERP CONGLOMERATE'}</div>
+          <div class="qr-product-title">${selectedQrItem.name || 'Product'}</div>
+          <div class="qr-code-box">
+            <img src="${qrDataUrl}" alt="${uniqueCode}" class="qr-img" />
+          </div>
+          <div class="qr-unique-code">${uniqueCode}</div>
+          <div class="qr-meta">
+            ${selectedQrItem.size ? `<span>Size: <b>${selectedQrItem.size}</b></span> • ` : ''}
+            ${selectedQrItem.color ? `<span>Color: <b>${selectedQrItem.color}</b></span> • ` : ''}
+            <span>Unit: <b>${uom}</b></span>
+          </div>
+          <div class="qr-footer">
+            <span>Copy ${index + 1} of ${copies}</span>
+            <span>₹${selectedQrItem.price || selectedQrItem.unitPrice || 0}</span>
+          </div>
+        </div>
+      `).join('');
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Print QR Labels - ${uniqueCode} (${copies} Copies)</title>
+          <style>
+            @page {
+              size: auto;
+              margin: 6mm;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              margin: 0;
+              padding: 10px;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 10px;
+              justify-content: flex-start;
+              background: #fff;
+            }
+            .qr-label-card {
+              width: 68mm;
+              height: 52mm;
+              box-sizing: border-box;
+              border: 1.5px dashed #333;
+              border-radius: 6px;
+              padding: 6px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: space-between;
+              page-break-inside: avoid;
+              text-align: center;
+            }
+            .qr-company {
+              font-size: 8px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              color: #475569;
+            }
+            .qr-product-title {
+              font-size: 11px;
+              font-weight: 800;
+              color: #0f172a;
+              line-height: 1.1;
+            }
+            .qr-code-box {
+              padding: 2px;
+            }
+            .qr-img {
+              width: 84px;
+              height: 84px;
+              display: block;
+            }
+            .qr-unique-code {
+              font-family: monospace;
+              font-size: 10px;
+              font-weight: 800;
+              color: #000;
+              background: #f1f5f9;
+              padding: 1px 6px;
+              border-radius: 4px;
+            }
+            .qr-meta {
+              font-size: 8.5px;
+              color: #334155;
+            }
+            .qr-footer {
+              width: 100%;
+              display: flex;
+              justify-content: space-between;
+              font-size: 8px;
+              font-weight: 700;
+              color: #64748b;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 2px;
+            }
+            @media print {
+              body {
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${labelsHtml}
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
             };
-          }
-          return item;
-        })
-      );
-
-      // 2. Add Stock IN inward entry
-      const newEntry = {
-        id: `INW-PRN-${Date.now().toString().slice(-4)}`,
-        date: new Date().toISOString().split('T')[0],
-        company: selectedQrItem.company,
-        sku: uniqueCode,
-        itemName: `${selectedQrItem.name} (${selectedQrItem.size}, ${selectedQrItem.color})`,
-        quantity: copies,
-        uom: uom,
-        supplier: 'QR Print Automation (Inward)',
-        referenceNo: `QR-PRN-${uniqueCode}`,
-        location: selectedQrItem.location || 'Warehouse Main',
-        receivedBy: 'Deepak Sharma',
-        status: 'Auto Inward Recorded',
-      };
-      setStockInRecords((prev) => [newEntry, ...prev]);
-
-      triggerToast(`Stock IN (+${copies} ${uom}) recorded & QR Label printed for ${uniqueCode}!`);
+          </script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
     } else {
-      triggerToast(`Printed ${copies} QR Label(s) for ${uniqueCode}!`);
+      window.print();
     }
 
     setSelectedQrItem(null);
-    window.print();
+  };
+
+  const handleSaveEditedStockItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStockItem) return;
+
+    const targetCode = editingStockItem.uniqueCode || editingStockItem.sku;
+    const numStock = Number(editingStockItem.stock) || 0;
+    const numMinStock = Number(editingStockItem.minStock) || 0;
+    const numPrice = Number(editingStockItem.price) || 0;
+
+    setStockItems((prev) =>
+      prev.map((item) => {
+        const match =
+          (item.uniqueCode && item.uniqueCode === targetCode) ||
+          (item.sku && item.sku === targetCode);
+        if (match) {
+          return {
+            ...item,
+            name: editingStockItem.name,
+            company: editingStockItem.company,
+            size: editingStockItem.size,
+            color: editingStockItem.color,
+            unit: editingStockItem.unit,
+            uom: editingStockItem.unit,
+            stock: numStock,
+            price: numPrice,
+            unitPrice: numPrice,
+            minStock: numMinStock,
+            location: editingStockItem.location,
+            status: numStock <= numMinStock ? 'Low Stock' : 'Optimal',
+          };
+        }
+        return item;
+      })
+    );
+
+    triggerToast(`Stock item ${targetCode} updated successfully!`);
+    setEditingStockItem(null);
   };
 
   const handlePrintAllQR = (count: number) => {
@@ -2259,9 +2481,28 @@ export default function App() {
               })}
             </nav>
           ) : (
-            /* In Specific Company (Siona Plasto, Sudhi, Swati, Vilaano): Workspaces Pill + 15 Workspaces */
+            /* In Specific Company (Siona Plasto, Sudhi, Swati, Vilaano): Dashboard + Workspaces Pill + Workspaces */
             <div className="flex-1 flex flex-col min-h-0">
               <div className="px-3 pb-2 space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveNav('Dashboard');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activeNav === 'Dashboard'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <span>Dashboard</span>
+                  </div>
+                  <span className={`text-[10px] font-mono ${activeNav === 'Dashboard' ? 'text-indigo-200' : 'opacity-60'}`}>Alt+D</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -2278,7 +2519,7 @@ export default function App() {
                     <LayoutGrid className="w-3.5 h-3.5" />
                     <span>Workspaces</span>
                   </div>
-                  <span className="text-[10px] opacity-60 font-mono">Alt+W</span>
+                  <span className={`text-[10px] font-mono ${activeNav === 'Workspaces' ? 'text-slate-300' : 'opacity-60'}`}>Alt+W</span>
                 </button>
               </div>
 
@@ -2366,12 +2607,26 @@ export default function App() {
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
                 placeholder="Search items, accounts, documents, pages..."
-                className="w-full bg-slate-50 hover:bg-slate-100/60 focus:bg-white text-xs pl-8 pr-12 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-slate-800"
+                className="w-full bg-slate-50 hover:bg-slate-100/60 focus:bg-white text-xs pl-8 pr-16 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all text-slate-800"
               />
-              <kbd className="hidden sm:inline-flex items-center text-[10px] text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 px-1 py-0.2 bg-white border border-slate-200 rounded font-mono">
-                Ctrl K
-              </kbd>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => startVoiceInput('GlobalSearch', (txt) => setGlobalSearch(txt))}
+                  title="Voice Search"
+                  className={`p-1 rounded cursor-pointer transition-colors ${
+                    listeningField === 'GlobalSearch' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                </button>
+                <kbd className="hidden sm:inline-flex items-center text-[10px] text-slate-400 px-1 py-0.2 bg-white border border-slate-200 rounded font-mono">
+                  Ctrl K
+                </kbd>
+              </div>
             </div>
           </div>
 
@@ -2681,6 +2936,245 @@ export default function App() {
                       <span className="text-[10px] font-mono text-slate-400 shrink-0">{act.time}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =========================================================================
+              VIEW 0B: COMPANY DASHBOARD (When Siona Plasto, Sudhi, Swati, Vilaano is selected)
+             ========================================================================= */}
+          {activeNav === 'Dashboard' && !isGlobalMode && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Header Greeting & Action Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg">
+                    {currentCompanyObj.short}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                        {currentCompanyObj.name} Dashboard
+                      </h1>
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        FY 2026–27
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {currentCompanyObj.sector} • {currentCompanyObj.location} • Operational Division
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveNav('Inventory');
+                      setInventoryTab('StockIn');
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>Stock IN</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveNav('Inventory');
+                      setInventoryTab('StockOut');
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <MinusCircle className="w-3.5 h-3.5" />
+                    <span>Stock OUT</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveNav('Workspaces')}
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>Workspaces</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Company Specific KPI Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Active SKUs
+                    </span>
+                    <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Package className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-slate-900 mt-2">
+                    {stockItems.filter((i) => i.company === selectedCompany).length}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                    <span>Low Stock: {stockItems.filter((i) => i.company === selectedCompany && i.stock <= (i.minStock || 0)).length}</span>
+                    <span className="text-emerald-600 font-semibold cursor-pointer" onClick={() => { setActiveNav('Inventory'); setInventoryTab('StockList'); }}>
+                      Manage Stock →
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Inventory Valuation
+                    </span>
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <IndianRupee className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-slate-900 mt-2">
+                    ₹{stockItems
+                      .filter((i) => i.company === selectedCompany)
+                      .reduce((sum, it) => sum + (it.stock * (it.price || it.unitPrice || 0)), 0)
+                      .toLocaleString()}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                    <span>Total Holding</span>
+                    <span className="font-semibold text-slate-700">
+                      {stockItems.filter((i) => i.company === selectedCompany).reduce((sum, it) => sum + it.stock, 0)} units
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Inward GRN (Stock In)
+                    </span>
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                      <ArrowDownLeft className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-slate-900 mt-2">
+                    {stockInRecords.filter((i) => i.company === selectedCompany).length}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                    <span>Recent Inward Receipts</span>
+                    <span className="text-amber-600 font-semibold cursor-pointer" onClick={() => { setActiveNav('Inventory'); setInventoryTab('StockIn'); }}>
+                      View Ledger →
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Outward Dispatches
+                    </span>
+                    <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                      <ArrowUpRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-slate-900 mt-2">
+                    {stockOutRecords.filter((i) => i.company === selectedCompany).length}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                    <span>Dispatched Orders</span>
+                    <span className="text-rose-600 font-semibold cursor-pointer" onClick={() => { setActiveNav('Inventory'); setInventoryTab('StockOut'); }}>
+                      View Dispatches →
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Department Workspaces Grid */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">Active Department Workspaces</h3>
+                    <p className="text-xs text-slate-500">Fast navigation across {currentCompanyObj.name} operations</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveNav('Workspaces')}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer flex items-center gap-1"
+                  >
+                    <span>All Workspaces ({WORKSPACES_CONFIG.length})</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                  {WORKSPACES_CONFIG.filter((ws) => ws.id !== 'Dashboard').slice(0, 6).map((ws) => {
+                    const Icon = ws.icon;
+                    return (
+                      <button
+                        key={ws.id}
+                        type="button"
+                        onClick={() => setActiveNav(ws.id)}
+                        className="p-3 rounded-xl border border-slate-200/80 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all text-left flex flex-col justify-between cursor-pointer group"
+                      >
+                        <div className={`w-7 h-7 rounded-lg ${ws.iconBg} flex items-center justify-center text-xs mb-2 group-hover:scale-105 transition-transform`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{ws.title}</p>
+                          <p className="text-[10px] text-slate-400 truncate">{ws.desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Company Live Stock Highlights Table */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">{currentCompanyObj.name} Live Stock Highlights</h3>
+                    <p className="text-xs text-slate-500">Registered inventory catalog and stock balances</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveNav('Inventory'); setInventoryTab('StockList'); }}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer flex items-center gap-1"
+                  >
+                    <span>Open Full Stock List</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 font-semibold">
+                        <th className="px-4 py-2.5">Unique Code</th>
+                        <th className="px-4 py-2.5">Product Name</th>
+                        <th className="px-4 py-2.5">Size / Color</th>
+                        <th className="px-4 py-2.5">Current Stock</th>
+                        <th className="px-4 py-2.5">Unit Price</th>
+                        <th className="px-4 py-2.5">Location</th>
+                        <th className="px-4 py-2.5">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {stockItems
+                        .filter((i) => i.company === selectedCompany)
+                        .slice(0, 6)
+                        .map((it) => (
+                          <tr key={it.uniqueCode || it.sku} className="hover:bg-slate-50/50">
+                            <td className="px-4 py-2.5 font-mono font-bold text-indigo-600">{it.uniqueCode || it.sku}</td>
+                            <td className="px-4 py-2.5 font-semibold text-slate-800">{it.name}</td>
+                            <td className="px-4 py-2.5 text-slate-500">{it.size || '-'} • {it.color || '-'}</td>
+                            <td className="px-4 py-2.5 font-bold text-slate-900">{it.stock} {it.unit || it.uom || 'PAC'}</td>
+                            <td className="px-4 py-2.5 text-slate-700">₹{it.price || it.unitPrice || 0}</td>
+                            <td className="px-4 py-2.5 text-slate-500">{it.location || 'Warehouse'}</td>
+                            <td className="px-4 py-2.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${it.stock <= (it.minStock || 0) ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                                {it.stock <= (it.minStock || 0) ? 'Low Stock' : 'Optimal'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -3075,7 +3569,16 @@ export default function App() {
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
                           <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">EN</span>
-                          <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                          <button
+                            type="button"
+                            onClick={() => startVoiceInput('inventorySearch', (txt) => setInventorySearch(txt))}
+                            title="Voice Search"
+                            className={`p-0.5 rounded cursor-pointer transition-colors ${
+                              listeningField === 'inventorySearch' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                          >
+                            <Mic className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
 
@@ -3271,7 +3774,7 @@ export default function App() {
                                         onClick={() => {
                                           setSelectedQrItem(item);
                                           setQrCopies(1);
-                                          setRecordStockInOnPrint(false);
+                                          setRecordStockInOnPrint(true);
                                         }}
                                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-colors cursor-pointer"
                                       >
@@ -3280,8 +3783,9 @@ export default function App() {
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => triggerToast(`Edit ${code}`)}
-                                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                                        onClick={() => setEditingStockItem({ ...item })}
+                                        title="Edit stock item"
+                                        className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
                                       >
                                         <Edit3 className="w-3.5 h-3.5" />
                                       </button>
@@ -3527,7 +4031,16 @@ export default function App() {
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">EN</span>
-                              <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('inwardCode', (txt) => setInwardProductCode(txt))}
+                                title="Voice Input"
+                                className={`cursor-pointer transition-colors ${
+                                  listeningField === 'inwardCode' ? 'text-rose-600 animate-pulse' : 'hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -3546,7 +4059,16 @@ export default function App() {
                               className="w-full px-3.5 py-2.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-10 text-slate-900 shadow-2xs"
                               required
                             />
-                            <Mic className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer hover:text-slate-600" />
+                            <button
+                              type="button"
+                              onClick={() => startVoiceInput('inwardName', (txt) => setInwardProductName(txt))}
+                              title="Voice Input"
+                              className={`absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer transition-colors ${
+                                listeningField === 'inwardName' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                              }`}
+                            >
+                              <Mic className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
 
@@ -3564,7 +4086,16 @@ export default function App() {
                                 onChange={(e) => setInwardSize(e.target.value)}
                                 className="w-full px-3 py-2.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-8 text-slate-900 shadow-2xs"
                               />
-                              <Mic className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer hover:text-slate-600" />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('inwardSize', (txt) => setInwardSize(txt))}
+                                title="Voice Input"
+                                className={`absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer transition-colors ${
+                                  listeningField === 'inwardSize' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                           <div className="space-y-1">
@@ -3579,7 +4110,16 @@ export default function App() {
                                 onChange={(e) => setInwardColor(e.target.value)}
                                 className="w-full px-3 py-2.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-8 text-slate-900 shadow-2xs"
                               />
-                              <Mic className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer hover:text-slate-600" />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('inwardColor', (txt) => setInwardColor(txt))}
+                                title="Voice Input"
+                                className={`absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer transition-colors ${
+                                  listeningField === 'inwardColor' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -3899,7 +4439,7 @@ export default function App() {
                         </div>
 
                         {/* Product Summary Card (Matching Image 1 & Image 2) */}
-                        {currentStockOutItem && (
+                        {currentStockOutItem ? (
                           <div className="p-3.5 rounded-2xl border border-blue-100/90 bg-[#f8faff] space-y-1.5 shadow-2xs">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -3978,6 +4518,16 @@ export default function App() {
                               </span>
                             </div>
                           </div>
+                        ) : (
+                          <div className="p-3.5 rounded-2xl border border-dashed border-amber-300 bg-amber-50/70 text-center space-y-1">
+                            <div className="flex items-center justify-center gap-1.5 text-amber-800 font-bold text-xs">
+                              <Package className="w-4 h-4 text-amber-600" />
+                              <span>No Product Selected</span>
+                            </div>
+                            <p className="text-[11px] text-amber-700">
+                              Please search and select a Unique Product Code below to view dispatch details and pricing.
+                            </p>
+                          </div>
                         )}
                       </div>
 
@@ -4005,7 +4555,16 @@ export default function App() {
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                                 EN
                               </span>
-                              <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('CustomerName', (txt) => setStockOutCustomerName(txt))}
+                                title="Voice Input"
+                                className={`cursor-pointer transition-colors ${
+                                  listeningField === 'CustomerName' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -4049,7 +4608,19 @@ export default function App() {
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                                 EN
                               </span>
-                              <Mic className="w-4 h-4 hover:text-slate-600 cursor-pointer" />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('ProductCode', (txt) => {
+                                  setStockOutProductCode(txt);
+                                  setStockOutSearchOpen(false);
+                                })}
+                                title="Voice Input"
+                                className={`cursor-pointer transition-colors ${
+                                  listeningField === 'ProductCode' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-4 h-4" />
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => setStockOutSearchOpen(!stockOutSearchOpen)}
@@ -4106,8 +4677,19 @@ export default function App() {
                           )}
                         </div>
 
+                        {/* CASE 0: NO PRODUCT SELECTED */}
+                        {!currentStockOutItem && (
+                          <div className="p-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-center space-y-2">
+                            <Package className="w-8 h-8 text-slate-300 mx-auto" />
+                            <div className="font-semibold text-slate-600 text-xs">No Product Selected for Dispatch</div>
+                            <p className="text-[11px] text-slate-400">
+                              Please search and select a Unique Product Code from the list above to proceed.
+                            </p>
+                          </div>
+                        )}
+
                         {/* CASE 1: KGS MODE (Image 2) */}
-                        {isOutItemKg && (
+                        {currentStockOutItem && isOutItemKg && (
                           <div className="space-y-4">
                             {/* SELECT DISPATCH MODE */}
                             <div className="p-3 rounded-2xl border border-slate-200/90 bg-slate-50/60 space-y-2">
@@ -4271,14 +4853,30 @@ export default function App() {
                                   {Math.round(
                                     (stockOutDispatchMode === 'packets'
                                       ? stockOutPackets * 0.5
-                                      : stockOutDirectWeight) * stockOutUnitPrice
+                                      : stockOutDirectWeight) * (Number(stockOutUnitPrice) || 0)
                                   ).toLocaleString()}
                                 </span>
                               </div>
                               <input
                                 type="number"
+                                min="0"
+                                step="any"
+                                placeholder="0"
                                 value={stockOutUnitPrice}
-                                onChange={(e) => setStockOutUnitPrice(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === '') {
+                                    setStockOutUnitPrice('');
+                                    return;
+                                  }
+                                  const num = parseFloat(val);
+                                  setStockOutUnitPrice(isNaN(num) ? '' : Math.max(0, num));
+                                }}
+                                onBlur={() => {
+                                  if (stockOutUnitPrice === '' || Number(stockOutUnitPrice) < 0) {
+                                    setStockOutUnitPrice(0);
+                                  }
+                                }}
                                 className="w-full px-3.5 py-2 font-bold text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                               />
                             </div>
@@ -4345,10 +4943,10 @@ export default function App() {
                               <span>
                                 {stockOutDispatchMode === 'packets'
                                   ? `Process Stock OUT (-${(stockOutPackets * 0.5).toFixed(1)} KGS • ${stockOutPackets} Packet${stockOutPackets > 1 ? 's' : ''} • ₹${Math.round(
-                                      stockOutPackets * 0.5 * stockOutUnitPrice
+                                      stockOutPackets * 0.5 * (Number(stockOutUnitPrice) || 0)
                                     ).toLocaleString()})`
                                   : `Process Stock OUT (-${stockOutDirectWeight} KGS • ₹${Math.round(
-                                      stockOutDirectWeight * stockOutUnitPrice
+                                      stockOutDirectWeight * (Number(stockOutUnitPrice) || 0)
                                     ).toLocaleString()})`}
                               </span>
                             </button>
@@ -4356,7 +4954,7 @@ export default function App() {
                         )}
 
                         {/* CASE 2: PAC MODE (Image 1) */}
-                        {!isOutItemKg && (
+                        {currentStockOutItem && !isOutItemKg && (
                           <div className="space-y-4">
                             {/* Dispatch Quantity (PAC) * */}
                             <div className="space-y-3">
@@ -4425,13 +5023,29 @@ export default function App() {
                                 </span>
                                 <span className="bg-blue-600 text-white font-bold text-xs px-3 py-1 rounded-lg shadow-2xs">
                                   Total: ₹
-                                  {Math.round(stockOutPacQty * stockOutUnitPrice).toLocaleString()}
+                                  {Math.round(stockOutPacQty * (Number(stockOutUnitPrice) || 0)).toLocaleString()}
                                 </span>
                               </div>
                               <input
                                 type="number"
+                                min="0"
+                                step="any"
+                                placeholder="0"
                                 value={stockOutUnitPrice}
-                                onChange={(e) => setStockOutUnitPrice(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === '') {
+                                    setStockOutUnitPrice('');
+                                    return;
+                                  }
+                                  const num = parseFloat(val);
+                                  setStockOutUnitPrice(isNaN(num) ? '' : Math.max(0, num));
+                                }}
+                                onBlur={() => {
+                                  if (stockOutUnitPrice === '' || Number(stockOutUnitPrice) < 0) {
+                                    setStockOutUnitPrice(0);
+                                  }
+                                }}
                                 className="w-full px-3.5 py-2 font-bold text-sm rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                               />
                             </div>
@@ -4469,7 +5083,7 @@ export default function App() {
                               <span>
                                 Process Stock OUT (-{stockOutPacQty}{' '}
                                 {currentStockOutItem?.unit || currentStockOutItem?.uom || 'PAC'} • ₹
-                                {Math.round(stockOutPacQty * stockOutUnitPrice).toLocaleString()})
+                                {Math.round(stockOutPacQty * (Number(stockOutUnitPrice) || 0)).toLocaleString()})
                               </span>
                             </button>
                           </div>
@@ -4590,6 +5204,257 @@ export default function App() {
                           </a>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* =========================================================================
+                    MODAL: EDIT STOCK ITEM (Point 3: Full Stock List Edit Modal)
+                   ========================================================================= */}
+                {editingStockItem && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+                    <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-auto animate-in fade-in zoom-in-95">
+                      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center shrink-0">
+                            <Edit3 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-slate-900">
+                              Edit Stock Item — {editingStockItem.uniqueCode || editingStockItem.sku}
+                            </h3>
+                            <p className="text-[11px] text-slate-500">
+                              Update item specifications, prices, stock level, and location
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setEditingStockItem(null)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleSaveEditedStockItem} className="p-6 space-y-4 text-xs">
+                        {/* Product Name & Unique Code */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Product Name *
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                required
+                                value={editingStockItem.name || ''}
+                                onChange={(e) => setEditingStockItem({ ...editingStockItem, name: e.target.value })}
+                                className="w-full pl-3 pr-8 py-2 font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('editName', (txt) => setEditingStockItem((prev: any) => ({ ...prev, name: txt })))}
+                                className={`absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer ${
+                                  listeningField === 'editName' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Unique Product Code
+                            </label>
+                            <input
+                              type="text"
+                              disabled
+                              value={editingStockItem.uniqueCode || editingStockItem.sku || ''}
+                              className="w-full px-3 py-2 font-mono font-bold rounded-xl border border-slate-200 bg-slate-100 text-slate-500 shadow-2xs cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Company & Base Unit */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Company *
+                            </label>
+                            <select
+                              value={editingStockItem.company || 'Siona Plasto'}
+                              onChange={(e) => setEditingStockItem({ ...editingStockItem, company: e.target.value })}
+                              className="w-full px-3 py-2 font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs cursor-pointer"
+                            >
+                              {COMPANIES.filter((c) => c.id !== 'All').map((c) => (
+                                <option key={c.id} value={c.name}>
+                                  {c.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Base Unit (UOM) *
+                            </label>
+                            <select
+                              value={editingStockItem.unit || editingStockItem.uom || 'PAC'}
+                              onChange={(e) => setEditingStockItem({ ...editingStockItem, unit: e.target.value, uom: e.target.value })}
+                              className="w-full px-3 py-2 font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs cursor-pointer"
+                            >
+                              <option value="PAC">PAC (Packets)</option>
+                              <option value="KGS">KGS (Kilograms)</option>
+                              <option value="Units">Units (Pieces)</option>
+                              <option value="Pairs">Pairs</option>
+                              <option value="Meters">Meters</option>
+                              <option value="Rolls">Rolls</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Size & Color */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Size / Dimension
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={editingStockItem.size || ''}
+                                onChange={(e) => setEditingStockItem({ ...editingStockItem, size: e.target.value })}
+                                placeholder="e.g. 2.5 MM TYRE, 4 MM, 500g"
+                                className="w-full pl-3 pr-8 py-2 font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('editSize', (txt) => setEditingStockItem((prev: any) => ({ ...prev, size: txt })))}
+                                className={`absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer ${
+                                  listeningField === 'editSize' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Color / Shade
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={editingStockItem.color || ''}
+                                onChange={(e) => setEditingStockItem({ ...editingStockItem, color: e.target.value })}
+                                placeholder="e.g. N-25, T-1, P.CREAM"
+                                className="w-full pl-3 pr-8 py-2 font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => startVoiceInput('editColor', (txt) => setEditingStockItem((prev: any) => ({ ...prev, color: txt })))}
+                                className={`absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer ${
+                                  listeningField === 'editColor' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                              >
+                                <Mic className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Current Stock & Unit Price (Selling Price) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Current Stock Quantity *
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              required
+                              value={editingStockItem.stock ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setEditingStockItem({ ...editingStockItem, stock: val === '' ? '' : Math.max(0, parseFloat(val) || 0) });
+                              }}
+                              className="w-full px-3 py-2 font-bold rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Valuation / Selling Price (₹) *
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              required
+                              value={editingStockItem.price ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setEditingStockItem({ ...editingStockItem, price: val === '' ? '' : Math.max(0, parseFloat(val) || 0) });
+                              }}
+                              className="w-full px-3 py-2 font-bold rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Min Stock Alert & Location */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Min Stock Alert Threshold
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={editingStockItem.minStock ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setEditingStockItem({ ...editingStockItem, minStock: val === '' ? '' : Math.max(0, parseInt(val) || 0) });
+                              }}
+                              className="w-full px-3 py-2 font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Warehouse Location
+                            </label>
+                            <input
+                              type="text"
+                              value={editingStockItem.location || ''}
+                              onChange={(e) => setEditingStockItem({ ...editingStockItem, location: e.target.value })}
+                              placeholder="e.g. Vapi Plant - Bay A, Nhava Sheva"
+                              className="w-full px-3 py-2 font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 shadow-2xs"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Modal Action Buttons */}
+                        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => setEditingStockItem(null)}
+                            className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>Save Stock Changes</span>
+                          </button>
+                        </div>
+                      </form>
                     </div>
                   </div>
                 )}
@@ -4982,8 +5847,18 @@ export default function App() {
                       placeholder="Search title, @company, staff, id..."
                       value={taskSearch}
                       onChange={(e) => setTaskSearch(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
+                    <button
+                      type="button"
+                      onClick={() => startVoiceInput('taskSearch', (txt) => setTaskSearch(txt))}
+                      title="Voice Search"
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded cursor-pointer transition-colors ${
+                        listeningField === 'taskSearch' ? 'text-rose-600 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                      }`}
+                    >
+                      <Mic className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
