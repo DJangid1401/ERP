@@ -2443,9 +2443,30 @@ export default function App() {
               })}
             </nav>
           ) : (
-            /* In Specific Company (Siona Plasto, Sudhi, Swati, Vilaano): Workspaces Pill + Workspaces */
+            /* In Specific Company (Siona Plasto, Sudhi, Swati, Vilaano): Tasks (Outside) + Workspaces Pill + Workspaces */
             <div className="flex-1 flex flex-col min-h-0">
               <div className="px-3 pb-2 space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveNav('Task');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activeNav === 'Task'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckSquare className="w-3.5 h-3.5" />
+                    <span>Tasks</span>
+                  </div>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeNav === 'Task' ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                    {tasks.length}
+                  </span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -2471,7 +2492,7 @@ export default function App() {
                   {currentCompanyObj.name} Workspaces
                 </p>
 
-                {WORKSPACES_CONFIG.map((ws) => {
+                {WORKSPACES_CONFIG.filter((ws) => ws.id !== 'Task').map((ws) => {
                   const Icon = ws.icon;
                   const isActive = activeNav === ws.id;
                   return (
@@ -2492,11 +2513,6 @@ export default function App() {
                         <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-700' : 'text-slate-400'}`} />
                         <span className="truncate">{ws.title}</span>
                       </div>
-                      {ws.id === 'Task' && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-slate-100 text-slate-700">
-                          {tasks.length}
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -3057,12 +3073,12 @@ export default function App() {
                     Workspaces
                   </h2>
                   <span className="text-xs font-medium text-slate-500">
-                    {WORKSPACES_CONFIG.length} Operational Modules • {currentCompanyObj.name}
+                    {WORKSPACES_CONFIG.filter((ws) => ws.id !== 'Task').length} Operational Modules • {currentCompanyObj.name}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5">
-                  {WORKSPACES_CONFIG.map((ws) => {
+                  {WORKSPACES_CONFIG.filter((ws) => ws.id !== 'Task').map((ws) => {
                     const Icon = ws.icon;
                     return (
                       <div
