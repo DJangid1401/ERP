@@ -2094,26 +2094,16 @@ export default function App() {
 
     triggerToast(`Stock IN (+${copies} ${uom}) recorded & ${copies} QR Label(s) printing!`);
 
-    // 3. Print ONLY the exact number of QR stickers (not entire dashboard)
+    // 3. Print ONLY the exact QR sticker matching user reference image (QR code + Size/Color, nothing else)
     const printWindow = window.open('', '_blank', 'width=750,height=700');
     if (printWindow) {
-      const labelsHtml = Array.from({ length: copies }, (_, index) => `
-        <div class="qr-label-card">
-          <div class="qr-company">${selectedQrItem.company || 'ERP CONGLOMERATE'}</div>
-          <div class="qr-product-title">${selectedQrItem.name || 'Product'}</div>
+      const labelText = [selectedQrItem.size, selectedQrItem.color].filter(Boolean).join(', ') || 'Standard';
+      const labelsHtml = Array.from({ length: copies }, () => `
+        <div class="qr-sticker">
           <div class="qr-code-box">
             <img src="${qrDataUrl}" alt="${uniqueCode}" class="qr-img" />
           </div>
-          <div class="qr-unique-code">${uniqueCode}</div>
-          <div class="qr-meta">
-            ${selectedQrItem.size ? `<span>Size: <b>${selectedQrItem.size}</b></span> • ` : ''}
-            ${selectedQrItem.color ? `<span>Color: <b>${selectedQrItem.color}</b></span> • ` : ''}
-            <span>Unit: <b>${uom}</b></span>
-          </div>
-          <div class="qr-footer">
-            <span>Copy ${index + 1} of ${copies}</span>
-            <span>₹${selectedQrItem.price || selectedQrItem.unitPrice || 0}</span>
-          </div>
+          <div class="qr-label-text">${labelText}</div>
         </div>
       `).join('');
 
@@ -2121,11 +2111,11 @@ export default function App() {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Print QR Labels - ${uniqueCode} (${copies} Copies)</title>
+          <title>Print QR - ${uniqueCode}</title>
           <style>
             @page {
               size: auto;
-              margin: 6mm;
+              margin: 8mm;
             }
             body {
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -2137,63 +2127,34 @@ export default function App() {
               justify-content: flex-start;
               background: #fff;
             }
-            .qr-label-card {
-              width: 68mm;
-              height: 52mm;
-              box-sizing: border-box;
-              border: 1.5px dashed #333;
-              border-radius: 6px;
-              padding: 6px;
-              display: flex;
+            .qr-sticker {
+              display: inline-flex;
               flex-direction: column;
               align-items: center;
-              justify-content: space-between;
+              justify-content: center;
+              border: 1px dashed #64748b;
+              border-radius: 4px;
+              padding: 6px 8px;
+              background: #fff;
               page-break-inside: avoid;
-              text-align: center;
-            }
-            .qr-company {
-              font-size: 8px;
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              color: #475569;
-            }
-            .qr-product-title {
-              font-size: 11px;
-              font-weight: 800;
-              color: #0f172a;
-              line-height: 1.1;
             }
             .qr-code-box {
-              padding: 2px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
             .qr-img {
-              width: 84px;
-              height: 84px;
+              width: 110px;
+              height: 110px;
               display: block;
             }
-            .qr-unique-code {
-              font-family: monospace;
-              font-size: 10px;
-              font-weight: 800;
-              color: #000;
-              background: #f1f5f9;
-              padding: 1px 6px;
-              border-radius: 4px;
-            }
-            .qr-meta {
+            .qr-label-text {
               font-size: 8.5px;
-              color: #334155;
-            }
-            .qr-footer {
-              width: 100%;
-              display: flex;
-              justify-content: space-between;
-              font-size: 8px;
               font-weight: 700;
-              color: #64748b;
-              border-top: 1px solid #e2e8f0;
-              padding-top: 2px;
+              color: #000;
+              margin-top: 4px;
+              text-align: center;
+              letter-spacing: 0.2px;
             }
             @media print {
               body {
@@ -2482,28 +2443,9 @@ export default function App() {
               })}
             </nav>
           ) : (
-            /* In Specific Company (Siona Plasto, Sudhi, Swati, Vilaano): Dashboard + Workspaces Pill + Workspaces */
+            /* In Specific Company (Siona Plasto, Sudhi, Swati, Vilaano): Workspaces Pill + Workspaces */
             <div className="flex-1 flex flex-col min-h-0">
               <div className="px-3 pb-2 space-y-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveNav('Dashboard');
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    activeNav === 'Dashboard'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <LayoutDashboard className="w-3.5 h-3.5" />
-                    <span>Dashboard</span>
-                  </div>
-                  <span className={`text-[10px] font-mono ${activeNav === 'Dashboard' ? 'text-indigo-200' : 'opacity-60'}`}>Alt+D</span>
-                </button>
-
                 <button
                   type="button"
                   onClick={() => {
