@@ -352,7 +352,7 @@ export default function Sidebar({
                         </ListItemIcon>
                         <ListItemText
                           primary={ws.title}
-                          primaryTypographyProps={{ fontSize: '0.75rem', fontWeight: isSelected ? 700 : 500 }}
+                          primaryTypographyProps={{ fontSize: '0.7rem', fontWeight: isSelected ? 700 : 500 }}
                         />
                       </ListItemButton>
                     </ListItem>
