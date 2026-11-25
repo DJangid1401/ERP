@@ -67,7 +67,6 @@ export default function InventoryView({
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Modals state
-  const [isStockInModalOpen, setIsStockInModalOpen] = useState(false);
   const [isStockOutModalOpen, setIsStockOutModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -81,14 +80,6 @@ export default function InventoryView({
 
   // QR Camera Scanner state
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-
-  // Form states for Stock IN
-  const [inwardCompany, setInwardCompany] = useState(isGlobalMode ? 'Siona Plasto' : selectedCompany);
-  const [inwardCode, setInwardCode] = useState('');
-  const [inwardMode, setInwardMode] = useState('PAC'); // 'PAC' or 'KGS'
-  const [inwardPackets, setInwardPackets] = useState(1);
-  const [inwardKgs, setInwardKgs] = useState(0.5);
-  const [inwardPrintQr, setInwardPrintQr] = useState(true);
 
   // Form states for Stock OUT
   const [outwardCustomer, setOutwardCustomer] = useState('Shree Ganesh Traders');
@@ -136,9 +127,22 @@ export default function InventoryView({
 
   // Open QR Print Modal
   const handleOpenQrModal = async (item) => {
+    if (!item) return;
     setSelectedQrItem(item);
     setQrCopies(1);
     setRecordStockInOnPrint(true);
+    await generateQrCodeData(item);
+    setIsQrModalOpen(true);
+  };
+
+  const handleSelectQrItem = async (item) => {
+    if (!item) return;
+    setSelectedQrItem(item);
+    await generateQrCodeData(item);
+  };
+
+  const generateQrCodeData = async (item) => {
+    if (!item) return;
     const code = item.uniqueCode || item.sku || 'PRD-0001';
     try {
       const url = await QRCode.toDataURL(code, {
@@ -150,7 +154,6 @@ export default function InventoryView({
     } catch (e) {
       console.error(e);
     }
-    setIsQrModalOpen(true);
   };
 
   // Execute QR Print & Add Stock IN
@@ -261,51 +264,6 @@ export default function InventoryView({
     }
   };
 
-  // Submit Stock IN
-  const handleRecordStockInSubmit = () => {
-    const product = stockItems.find((i) => (i.uniqueCode || i.sku) === inwardCode);
-    if (!product) {
-      alert('Please select a valid product code!');
-      return;
-    }
-
-    const addedQty = inwardMode === 'PAC' ? Math.max(1, inwardPackets) : Math.max(1, Math.round(inwardKgs / 0.5));
-    const uom = product.unit || product.uom || 'PAC';
-
-    setStockItems((prev) =>
-      prev.map((it) => {
-        if ((it.uniqueCode || it.sku) === inwardCode) {
-          return {
-            ...it,
-            stock: (it.stock || 0) + addedQty,
-            stockIn: (it.stockIn || 0) + addedQty,
-          };
-        }
-        return it;
-      })
-    );
-
-    const newRecord = {
-      id: `GRN-${Date.now().toString().slice(-4)}`,
-      date: new Date().toISOString().split('T')[0],
-      company: inwardCompany,
-      code: inwardCode,
-      name: product.name,
-      qty: addedQty,
-      unit: uom,
-      mode: inwardMode === 'PAC' ? '500g Packets' : 'Direct KGS',
-      source: 'Gate Inward Entry',
-    };
-    setStockInRecords((prev) => [newRecord, ...prev]);
-
-    triggerToast(`Stock IN: Recorded +${addedQty} ${uom} for ${inwardCode}`);
-    setIsStockInModalOpen(false);
-
-    if (inwardPrintQr) {
-      handleOpenQrModal(product);
-    }
-  };
-
   // Submit Stock OUT
   const handleRecordStockOutSubmit = () => {
     if (!selectedOutwardItem) {
@@ -383,7 +341,10 @@ export default function InventoryView({
             <Button
               variant="contained"
               size="small"
-              onClick={() => setIsStockInModalOpen(true)}
+              onClick={() => {
+                const target = filteredStock[0] || stockItems[0];
+                if (target) handleOpenQrModal(target);
+              }}
               startIcon={<AddCircleOutlinedIcon />}
               sx={{
                 bgcolor: '#059669',
@@ -695,124 +656,6 @@ export default function InventoryView({
         </Card>
       )}
 
-      {/* MODAL 1: RECORD STOCK IN */}
-      <Dialog open={isStockInModalOpen} onClose={() => setIsStockInModalOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <AddCircleOutlinedIcon sx={{ color: '#059669' }} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>Record Stock IN (Inward GRN)</Typography>
-          </Box>
-          <IconButton size="small" onClick={() => setIsStockInModalOpen(false)}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ p: 2.5 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 700, color: '#334155', display: 'block', mb: 0.5 }}>
-                Company / Plant
-              </Typography>
-              <Select
-                fullWidth
-                size="small"
-                value={inwardCompany}
-                onChange={(e) => setInwardCompany(e.target.value)}
-              >
-                {companies.filter((c) => c.id !== 'All').map((c) => (
-                  <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                ))}
-              </Select>
-            </Box>
-
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, color: '#334155' }}>
-                  Unique Product Code *
-                </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setIsScannerOpen(true)}
-                  startIcon={<CameraAltOutlinedIcon sx={{ fontSize: 14 }} />}
-                  sx={{ py: 0.2, px: 1, fontSize: '0.65rem', textTransform: 'none', borderRadius: 1.5 }}
-                >
-                  Scan QR / Camera
-                </Button>
-              </Box>
-
-              <Select
-                fullWidth
-                size="small"
-                value={inwardCode}
-                onChange={(e) => setInwardCode(e.target.value)}
-                displayEmpty
-              >
-                <MenuItem value="" disabled>Select Product Code</MenuItem>
-                {stockItems.map((i) => (
-                  <MenuItem key={i.uniqueCode || i.sku} value={i.uniqueCode || i.sku}>
-                    {(i.uniqueCode || i.sku)} — {i.name} ({[i.size, i.color].filter(Boolean).join(' • ')})
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
-
-            {/* Inward Mode */}
-            <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-              <Typography variant="caption" sx={{ fontWeight: 700, color: '#334155', display: 'block', mb: 1 }}>
-                Inward Mode
-              </Typography>
-              <RadioGroup row value={inwardMode} onChange={(e) => setInwardMode(e.target.value)}>
-                <FormControlLabel value="PAC" control={<Radio size="small" />} label={<Typography variant="caption" sx={{ fontWeight: 700 }}>500g Packets (Standard)</Typography>} />
-                <FormControlLabel value="KGS" control={<Radio size="small" />} label={<Typography variant="caption" sx={{ fontWeight: 700 }}>Direct KGS / Bulk Weight</Typography>} />
-              </RadioGroup>
-
-              {inwardMode === 'PAC' ? (
-                <Box sx={{ mt: 1.5 }}>
-                  <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 0.5 }}>Number of Packets:</Typography>
-                  <TextField
-                    type="number"
-                    size="small"
-                    fullWidth
-                    value={inwardPackets}
-                    onChange={(e) => setInwardPackets(Math.max(1, parseInt(e.target.value) || 1))}
-                    inputProps={{ min: 1 }}
-                  />
-                  <Typography variant="caption" sx={{ color: '#059669', fontWeight: 600, mt: 0.5, display: 'block' }}>
-                    Equivalent Weight: {inwardPackets * 0.5} KGS (500g each)
-                  </Typography>
-                </Box>
-              ) : (
-                <Box sx={{ mt: 1.5 }}>
-                  <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 0.5 }}>Gross Weight (KGS):</Typography>
-                  <TextField
-                    type="number"
-                    size="small"
-                    fullWidth
-                    value={inwardKgs}
-                    onChange={(e) => setInwardKgs(Math.max(0.1, parseFloat(e.target.value) || 0.1))}
-                    inputProps={{ min: 0.1, step: 0.5 }}
-                  />
-                  <Typography variant="caption" sx={{ color: '#059669', fontWeight: 600, mt: 0.5, display: 'block' }}>
-                    Auto-computed Packets: {Math.round(inwardKgs / 0.5)} PAC (500g each)
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-
-            <FormControlLabel
-              control={<Checkbox checked={inwardPrintQr} onChange={(e) => setInwardPrintQr(e.target.checked)} size="small" />}
-              label={<Typography variant="caption" sx={{ fontWeight: 600 }}>Print QR Sticker immediately upon recording</Typography>}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setIsStockInModalOpen(false)} color="inherit">Cancel</Button>
-          <Button variant="contained" onClick={handleRecordStockInSubmit} sx={{ bgcolor: '#059669', '&:hover': { bgcolor: '#047857' } }}>
-            Confirm & Add Stock IN
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* MODAL 2: RECORD STOCK OUT */}
       <Dialog open={isStockOutModalOpen} onClose={() => setIsStockOutModalOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -997,11 +840,13 @@ export default function InventoryView({
         </DialogActions>
       </Dialog>
 
-      {/* QR Code Label Print Modal */}
+      {/* Unified Stock IN & QR Label Print Modal (Second One) */}
       <QrPrintModal
         open={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
         item={selectedQrItem}
+        items={filteredStock.length > 0 ? filteredStock : stockItems}
+        onSelectItem={handleSelectQrItem}
         copies={qrCopies}
         onCopiesChange={setQrCopies}
         recordAsStockIn={recordStockInOnPrint}
@@ -1015,7 +860,10 @@ export default function InventoryView({
         open={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onScanSuccess={(code) => {
-          setInwardCode(code);
+          const found = stockItems.find((i) => (i.uniqueCode || i.sku) === code);
+          if (found) {
+            handleOpenQrModal(found);
+          }
           setIsScannerOpen(false);
           triggerToast(`Scanned Code: ${code}`);
         }}

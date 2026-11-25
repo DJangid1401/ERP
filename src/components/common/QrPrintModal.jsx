@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   IconButton,
   Typography,
   Box,
@@ -12,6 +11,8 @@ import {
   Checkbox,
   Button,
   Link,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PrintIcon from '@mui/icons-material/Print';
@@ -21,6 +22,8 @@ export default function QrPrintModal({
   open,
   onClose,
   item,
+  items,
+  onSelectItem,
   copies,
   onCopiesChange,
   recordAsStockIn,
@@ -59,6 +62,39 @@ export default function QrPrintModal({
       </DialogTitle>
 
       <DialogContent sx={{ px: 2, py: 1 }}>
+        {/* Product Dropdown Selector */}
+        {items && items.length > 0 && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: '#334155', display: 'block', mb: 0.5 }}>
+              Product Code / Description:
+            </Typography>
+            <Select
+              fullWidth
+              size="small"
+              value={uniqueCode}
+              onChange={(e) => {
+                const found = items.find((i) => (i.uniqueCode || i.sku) === e.target.value);
+                if (found && onSelectItem) onSelectItem(found);
+              }}
+              sx={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                bgcolor: '#f8fafc',
+                borderRadius: 2,
+              }}
+            >
+              {items.map((i) => {
+                const c = i.uniqueCode || i.sku;
+                return (
+                  <MenuItem key={c} value={c}>
+                    {c} — {i.name} ({[i.size, i.color].filter(Boolean).join(' • ')})
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </Box>
+        )}
+
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Typography variant="caption" sx={{ fontWeight: 600, color: '#334155' }}>
             Copies per product:
