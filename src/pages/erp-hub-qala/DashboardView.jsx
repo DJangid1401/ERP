@@ -46,65 +46,63 @@ export default function DashboardView({
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* KPI Summary Cards */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Consolidated Valuation"
-              value={`₹${totalGroupValuation.toLocaleString()}`}
-              subtext={`Across 4 active operating companies`}
-              icon={CurrencyRupeeIcon}
-              iconColor="#059669"
-              iconBg="#ecfdf5"
-              actionText="View Inventory →"
-              onAction={() =>
-                onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
-              }
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Total Catalog SKUs"
-              value={stockItems.length}
-              subtext={`${stockItems.filter((i) => i.stock <= (i.minStock || 0)).length} low stock alerts`}
-              icon={Inventory2OutlinedIcon}
-              iconColor="#4f46e5"
-              iconBg="#eef2ff"
-              actionText="Manage Stock →"
-              onAction={() =>
-                onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
-              }
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Group Inward Receipts"
-              value={stockInRecords.length}
-              subtext="Logged across manufacturing plants"
-              icon={SouthWestIcon}
-              iconColor="#d97706"
-              iconBg="#fffbeb"
-              actionText="View Inward Ledger →"
-              onAction={() =>
-                onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
-              }
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Total Outward Dispatches"
-              value={stockOutRecords.length}
-              subtext="Dispatched to distributors & stores"
-              icon={NorthEastIcon}
-              iconColor="#e11d48"
-              iconBg="#fff1f2"
-              actionText="View Dispatches →"
-              onAction={() =>
-                onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
-              }
-            />
-          </Grid>
-        </Grid>
+        {/* KPI Summary Cards - Aligned 4 Tabs */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(4, 1fr)',
+            },
+            gap: 2,
+          }}
+        >
+          <StatCard
+            title="Consolidated Valuation"
+            value={`₹${totalGroupValuation.toLocaleString()}`}
+            subtext={`Across 4 active operating companies`}
+            icon={CurrencyRupeeIcon}
+            iconColor="#059669"
+            iconBg="#ecfdf5"
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+            }
+          />
+          <StatCard
+            title="Total Catalog SKUs"
+            value={stockItems.length}
+            subtext={`${stockItems.filter((i) => i.stock <= (i.minStock || 0)).length} low stock alerts`}
+            icon={Inventory2OutlinedIcon}
+            iconColor="#4f46e5"
+            iconBg="#eef2ff"
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+            }
+          />
+          <StatCard
+            title="Group Inward Receipts"
+            value={stockInRecords.length}
+            subtext="Logged across manufacturing plants"
+            icon={SouthWestIcon}
+            iconColor="#d97706"
+            iconBg="#fffbeb"
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
+            }
+          />
+          <StatCard
+            title="Total Outward Dispatches"
+            value={stockOutRecords.length}
+            subtext="Dispatched to distributors & stores"
+            icon={NorthEastIcon}
+            iconColor="#e11d48"
+            iconBg="#fff1f2"
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
+            }
+          />
+        </Box>
 
         {/* 4 Company Operation Cards */}
         <Box>
@@ -301,65 +299,63 @@ export default function DashboardView({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* 4 Company Specific KPI Summary Cards */}
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Active SKUs"
-            value={compStock.length}
-            subtext={`Low Stock: ${lowStockCount}`}
-            icon={Inventory2OutlinedIcon}
-            iconColor="#4f46e5"
-            iconBg="#eef2ff"
-            actionText="Manage Stock →"
-            onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
-            }
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Inventory Valuation"
-            value={`₹${compValuation.toLocaleString()}`}
-            subtext={`Total Holding ${totalUnits} units`}
-            icon={CurrencyRupeeIcon}
-            iconColor="#059669"
-            iconBg="#ecfdf5"
-            actionText="View Inventory →"
-            onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
-            }
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Inward GRN (Stock In)"
-            value={compStockIn.length}
-            subtext="Recent Inward Receipts"
-            icon={SouthWestIcon}
-            iconColor="#d97706"
-            iconBg="#fffbeb"
-            actionText="View Inward Ledger →"
-            onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
-            }
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="Outward Dispatches"
-            value={compStockOut.length}
-            subtext="Dispatched Orders"
-            icon={NorthEastIcon}
-            iconColor="#e11d48"
-            iconBg="#fff1f2"
-            actionText="View Dispatches →"
-            onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
-            }
-          />
-        </Grid>
-      </Grid>
+      {/* 4 Company Specific KPI Summary Cards - Aligned 4 Tabs */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(4, 1fr)',
+          },
+          gap: 2,
+        }}
+      >
+        <StatCard
+          title="Active SKUs"
+          value={compStock.length}
+          subtext={`Low Stock: ${lowStockCount}`}
+          icon={Inventory2OutlinedIcon}
+          iconColor="#4f46e5"
+          iconBg="#eef2ff"
+          onAction={() =>
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+          }
+        />
+        <StatCard
+          title="Inventory Valuation"
+          value={`₹${compValuation.toLocaleString()}`}
+          subtext={`Total Holding ${totalUnits} units`}
+          icon={CurrencyRupeeIcon}
+          iconColor="#059669"
+          iconBg="#ecfdf5"
+          onAction={() =>
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+          }
+        />
+        <StatCard
+          title="Inward GRN (Stock In)"
+          value={compStockIn.length}
+          subtext="Recent Inward Receipts"
+          icon={SouthWestIcon}
+          iconColor="#d97706"
+          iconBg="#fffbeb"
+          onAction={() =>
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
+          }
+        />
+        <StatCard
+          title="Outward Dispatches"
+          value={compStockOut.length}
+          subtext="Dispatched Orders"
+          icon={NorthEastIcon}
+          iconColor="#e11d48"
+          iconBg="#fff1f2"
+          onAction={() =>
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
+          }
+        />
+      </Box>
 
       {/* Company Live Stock Highlights Table */}
       <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
