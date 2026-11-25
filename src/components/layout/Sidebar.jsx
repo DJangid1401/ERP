@@ -235,7 +235,7 @@ export default function Sidebar({
                   onSelectNav('Task');
                   if (onCloseMobile) onCloseMobile();
                 }}
-                startIcon={<AssignmentIcon sx={{ fontSize: 18 }} />}
+                startIcon={<AssignmentIcon sx={{ fontSize: 16 }} />}
                 sx={{
                   py: 0.8,
                   px: 1.5,
@@ -243,7 +243,7 @@ export default function Sidebar({
                   textTransform: 'none',
                   justifyContent: 'space-between',
                   fontWeight: 700,
-                  fontSize: '0.8rem',
+                  fontSize: '11.5px',
                   backgroundColor: activeNav === 'Task' ? '#4f46e5' : '#f8fafc',
                   color: activeNav === 'Task' ? '#ffffff' : '#334155',
                   border: '1px solid',
@@ -260,7 +260,7 @@ export default function Sidebar({
                     px: 0.8,
                     py: 0.1,
                     borderRadius: 9999,
-                    fontSize: '0.65rem',
+                    fontSize: '10px',
                     fontWeight: 800,
                     bgcolor: activeNav === 'Task' ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
                     color: activeNav === 'Task' ? '#ffffff' : '#475569',
@@ -277,7 +277,7 @@ export default function Sidebar({
                   onSelectNav('Workspaces');
                   if (onCloseMobile) onCloseMobile();
                 }}
-                startIcon={<GridViewIcon sx={{ fontSize: 18 }} />}
+                startIcon={<GridViewIcon sx={{ fontSize: 16 }} />}
                 sx={{
                   py: 0.8,
                   px: 1.5,
@@ -285,7 +285,7 @@ export default function Sidebar({
                   textTransform: 'none',
                   justifyContent: 'space-between',
                   fontWeight: 700,
-                  fontSize: '0.8rem',
+                  fontSize: '11.5px',
                   backgroundColor: activeNav === 'Workspaces' ? '#0f172a' : '#f8fafc',
                   color: activeNav === 'Workspaces' ? '#ffffff' : '#334155',
                   border: '1px solid',
@@ -296,7 +296,7 @@ export default function Sidebar({
                 }}
               >
                 <span>Workspaces</span>
-                <Typography variant="caption" sx={{ fontSize: '0.65rem', opacity: 0.6, fontFamily: 'monospace' }}>
+                <Typography variant="caption" sx={{ fontSize: '10px', opacity: 0.6, fontFamily: 'monospace' }}>
                   Alt+W
                 </Typography>
               </Button>
@@ -352,7 +352,7 @@ export default function Sidebar({
                         </ListItemIcon>
                         <ListItemText
                           primary={ws.title}
-                          primaryTypographyProps={{ fontSize: '0.7rem', fontWeight: isSelected ? 700 : 500 }}
+                          primaryTypographyProps={{ fontSize: '10px', fontWeight: isSelected ? 700 : 500 }}
                         />
                       </ListItemButton>
                     </ListItem>
