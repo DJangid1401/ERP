@@ -34,6 +34,7 @@ export default function DashboardView({
   stockOutRecords,
   onSelectCompany,
   onNavigate,
+  onNavigateToInventoryTab,
 }) {
   if (isGlobalMode) {
     /* Central Group Dashboard */
@@ -56,7 +57,9 @@ export default function DashboardView({
               iconColor="#059669"
               iconBg="#ecfdf5"
               actionText="View Inventory →"
-              onAction={() => onNavigate('Inventory')}
+              onAction={() =>
+                onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+              }
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -68,7 +71,9 @@ export default function DashboardView({
               iconColor="#4f46e5"
               iconBg="#eef2ff"
               actionText="Manage Stock →"
-              onAction={() => onNavigate('Inventory')}
+              onAction={() =>
+                onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+              }
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -80,7 +85,9 @@ export default function DashboardView({
               iconColor="#d97706"
               iconBg="#fffbeb"
               actionText="View Inward Ledger →"
-              onAction={() => onNavigate('Inventory')}
+              onAction={() =>
+                onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
+              }
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -92,7 +99,9 @@ export default function DashboardView({
               iconColor="#e11d48"
               iconBg="#fff1f2"
               actionText="View Dispatches →"
-              onAction={() => onNavigate('Inventory')}
+              onAction={() =>
+                onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
+              }
             />
           </Grid>
         </Grid>
@@ -303,7 +312,9 @@ export default function DashboardView({
             iconColor="#4f46e5"
             iconBg="#eef2ff"
             actionText="Manage Stock →"
-            onAction={() => onNavigate('Inventory')}
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+            }
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -314,8 +325,10 @@ export default function DashboardView({
             icon={CurrencyRupeeIcon}
             iconColor="#059669"
             iconBg="#ecfdf5"
-            actionText="Full Inventory →"
-            onAction={() => onNavigate('Inventory')}
+            actionText="View Inventory →"
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+            }
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -326,8 +339,10 @@ export default function DashboardView({
             icon={SouthWestIcon}
             iconColor="#d97706"
             iconBg="#fffbeb"
-            actionText="View Ledger →"
-            onAction={() => onNavigate('Inventory')}
+            actionText="View Inward Ledger →"
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
+            }
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -339,7 +354,9 @@ export default function DashboardView({
             iconColor="#e11d48"
             iconBg="#fff1f2"
             actionText="View Dispatches →"
-            onAction={() => onNavigate('Inventory')}
+            onAction={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
+            }
           />
         </Grid>
       </Grid>
@@ -357,7 +374,9 @@ export default function DashboardView({
           </Box>
           <Button
             size="small"
-            onClick={() => onNavigate('Inventory')}
+            onClick={() =>
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+            }
             endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
             sx={{
               textTransform: 'none',

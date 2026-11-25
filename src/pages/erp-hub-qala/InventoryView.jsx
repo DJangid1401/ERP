@@ -57,9 +57,16 @@ export default function InventoryView({
   triggerToast,
   startVoiceInput,
   listeningField,
+  currentTab: controlledTab,
+  onTabChange,
 }) {
   const isGlobalMode = selectedCompany === 'All';
-  const [currentTab, setCurrentTab] = useState(0); // 0: StockList, 1: StockIn, 2: StockOut
+  const [internalTab, setInternalTab] = useState(0); // 0: StockList, 1: StockIn, 2: StockOut
+  const currentTab = controlledTab !== undefined ? controlledTab : internalTab;
+  const setCurrentTab = (val) => {
+    if (onTabChange) onTabChange(val);
+    setInternalTab(val);
+  };
   const [inBarCompanyFilter, setInBarCompanyFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductFilter, setSelectedProductFilter] = useState('All');

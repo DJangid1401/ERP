@@ -14,6 +14,7 @@ export default function StatCard({
   return (
     <Card
       elevation={0}
+      onClick={onAction}
       sx={{
         borderRadius: 3,
         border: '1px solid #e2e8f0',
@@ -23,10 +24,17 @@ export default function StatCard({
         flexDirection: 'column',
         justifyContent: 'space-between',
         transition: 'all 0.2s ease',
-        '&:hover': {
-          borderColor: '#cbd5e1',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-        },
+        cursor: onAction ? 'pointer' : 'default',
+        '&:hover': onAction
+          ? {
+              borderColor: '#6366f1',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.12)',
+              transform: 'translateY(-2px)',
+            }
+          : {
+              borderColor: '#cbd5e1',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+            },
       }}
     >
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
@@ -72,13 +80,16 @@ export default function StatCard({
           {actionText && (
             <Typography
               variant="caption"
-              onClick={onAction}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onAction) onAction();
+              }}
               sx={{
                 color: '#4f46e5',
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: '0.75rem',
                 cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' },
+                '&:hover': { textDecoration: 'underline', color: '#4338ca' },
               }}
             >
               {actionText}

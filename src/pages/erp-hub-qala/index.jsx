@@ -29,6 +29,12 @@ import {
 export default function ErpHubQalaPage() {
   const [selectedCompany, setSelectedCompany] = useState('All');
   const [activeNav, setActiveNav] = useState('Dashboard');
+  const [inventoryTab, setInventoryTab] = useState(0);
+
+  const handleNavigateToInventoryTab = (tabIndex) => {
+    setInventoryTab(tabIndex);
+    setActiveNav('Inventory');
+  };
 
   // Shared data state
   const [stockItems, setStockItems] = useState(INITIAL_STOCK_LIST);
@@ -157,6 +163,7 @@ export default function ErpHubQalaPage() {
             stockOutRecords={stockOutRecords}
             onSelectCompany={handleSelectCompany}
             onNavigate={setActiveNav}
+            onNavigateToInventoryTab={handleNavigateToInventoryTab}
           />
         )}
 
@@ -174,6 +181,8 @@ export default function ErpHubQalaPage() {
             triggerToast={triggerToast}
             startVoiceInput={startVoiceInput}
             listeningField={listeningField}
+            currentTab={inventoryTab}
+            onTabChange={setInventoryTab}
           />
         )}
 
