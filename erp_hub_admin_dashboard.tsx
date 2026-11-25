@@ -2975,45 +2975,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Department Workspaces Grid */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm">Active Department Workspaces</h3>
-                    <p className="text-xs text-slate-500">Fast navigation across {currentCompanyObj.name} operations</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveNav('Workspaces')}
-                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer flex items-center gap-1"
-                  >
-                    <span>All Workspaces ({WORKSPACES_CONFIG.length})</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
-                  {WORKSPACES_CONFIG.filter((ws) => ws.id !== 'Dashboard').slice(0, 6).map((ws) => {
-                    const Icon = ws.icon;
-                    return (
-                      <button
-                        key={ws.id}
-                        type="button"
-                        onClick={() => setActiveNav(ws.id)}
-                        className="p-3 rounded-xl border border-slate-200/80 hover:border-indigo-300 hover:bg-indigo-50/30 transition-all text-left flex flex-col justify-between cursor-pointer group"
-                      >
-                        <div className={`w-7 h-7 rounded-lg ${ws.iconBg} flex items-center justify-center text-xs mb-2 group-hover:scale-105 transition-transform`}>
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{ws.title}</p>
-                          <p className="text-[10px] text-slate-400 truncate">{ws.desc}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Company Live Stock Highlights Table */}
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
                 <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
