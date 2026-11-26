@@ -521,127 +521,176 @@ export default function InventoryView({
       {/* TAB 0: FULL STOCK LIST */}
       {currentTab === 0 && (
         <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', overflow: 'hidden', bgcolor: '#ffffff' }}>
-          {/* Filter Bar: Stock Status, Categories, Location & Search */}
-          <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5, borderBottom: '1px solid #f1f5f9' }}>
-            {/* Row 1: Stock Status Filter Chips & Reset Filters */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
-                  Stock Status:
-                </Typography>
-                {[
-                  { label: `All Items (${filteredStock.length})`, value: 'All', color: '#1e293b' },
-                  { label: 'Optimal Stock', value: 'Optimal', color: '#059669' },
-                  { label: 'Low Stock Alerts', value: 'Low Stock', color: '#d97706' },
-                  { label: 'Out of Stock', value: 'Out of Stock', color: '#e11d48' },
-                ].map((st) => (
-                  <Chip
-                    key={st.value}
-                    label={st.label}
-                    size="small"
-                    onClick={() => setStockStatusFilter(st.value)}
+          {/* Filter Bar: Searchable Dropdowns & Fixed Search Box */}
+          <Box
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: { xs: 'wrap', lg: 'nowrap' },
+              gap: 1.5,
+              borderBottom: '1px solid #f1f5f9',
+            }}
+          >
+            {/* Left: Searchable Filter Dropdowns + Reset */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', flex: 1 }}>
+              <Autocomplete
+                size="small"
+                disableClearable
+                openOnFocus
+                options={[
+                  { label: `All Items (${filteredStock.length})`, value: 'All' },
+                  { label: 'Optimal Stock', value: 'Optimal' },
+                  { label: 'Low Stock Alerts', value: 'Low Stock' },
+                  { label: 'Out of Stock', value: 'Out of Stock' },
+                ]}
+                getOptionLabel={(opt) => opt.label || ''}
+                isOptionEqualToValue={(opt, val) => opt.value === val.value}
+                value={
+                  [
+                    { label: `All Items (${filteredStock.length})`, value: 'All' },
+                    { label: 'Optimal Stock', value: 'Optimal' },
+                    { label: 'Low Stock Alerts', value: 'Low Stock' },
+                    { label: 'Out of Stock', value: 'Out of Stock' },
+                  ].find((o) => o.value === stockStatusFilter) || {
+                    label: `All Items (${filteredStock.length})`,
+                    value: 'All',
+                  }
+                }
+                onChange={(e, newVal) => {
+                  setStockStatusFilter(newVal ? newVal.value : 'All');
+                  setPage(0);
+                }}
+                sx={{ width: { xs: '100%', sm: 175 } }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Stock Status"
+                    placeholder="Search status..."
+                    InputLabelProps={{ shrink: true, sx: { fontSize: '0.75rem', fontWeight: 700, color: '#64748b' } }}
                     sx={{
-                      fontWeight: 700,
-                      fontSize: '0.7rem',
-                      bgcolor: stockStatusFilter === st.value ? st.color : '#f8fafc',
-                      color: stockStatusFilter === st.value ? '#ffffff' : '#475569',
-                      border: '1px solid #e2e8f0',
-                      cursor: 'pointer',
+                      '& .MuiOutlinedInput-root': {
+                        height: 36,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        bgcolor: '#f8fafc',
+                        borderRadius: 2,
+                      },
                     }}
                   />
-                ))}
-              </Box>
+                )}
+              />
 
-              {hasActiveStockFilters && (
-                <Button
-                  size="small"
-                  onClick={handleResetStockFilters}
-                  sx={{
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    color: '#e11d48',
-                    textTransform: 'none',
-                    py: 0.2,
-                  }}
-                >
-                  Reset Filters
-                </Button>
-              )}
+              <Autocomplete
+                size="small"
+                disableClearable
+                openOnFocus
+                options={productCategories}
+                getOptionLabel={(opt) => (opt === 'All' ? 'All Products' : opt)}
+                value={selectedProductFilter}
+                onChange={(e, newVal) => {
+                  setSelectedProductFilter(newVal || 'All');
+                  setPage(0);
+                }}
+                sx={{ width: { xs: '100%', sm: 210 } }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Product"
+                    placeholder="Search product..."
+                    InputLabelProps={{ shrink: true, sx: { fontSize: '0.75rem', fontWeight: 700, color: '#64748b' } }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        height: 36,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        bgcolor: '#f8fafc',
+                        borderRadius: 2,
+                      },
+                    }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                size="small"
+                disableClearable
+                openOnFocus
+                options={locationList}
+                getOptionLabel={(opt) => (opt === 'All' ? 'All Locations' : opt)}
+                value={locationFilter}
+                onChange={(e, newVal) => {
+                  setLocationFilter(newVal || 'All');
+                  setPage(0);
+                }}
+                sx={{ width: { xs: '100%', sm: 175 } }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Location"
+                    placeholder="Search location..."
+                    InputLabelProps={{ shrink: true, sx: { fontSize: '0.75rem', fontWeight: 700, color: '#64748b' } }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        height: 36,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        bgcolor: '#f8fafc',
+                        borderRadius: 2,
+                      },
+                    }}
+                  />
+                )}
+              />
+
+              <Button
+                size="small"
+                onClick={handleResetStockFilters}
+                disabled={!hasActiveStockFilters}
+                sx={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  color: hasActiveStockFilters ? '#e11d48' : 'transparent',
+                  textTransform: 'none',
+                  px: 1,
+                  minWidth: 90,
+                  height: 36,
+                  visibility: hasActiveStockFilters ? 'visible' : 'hidden',
+                }}
+              >
+                Reset Filters
+              </Button>
             </Box>
 
-            {/* Row 2: Product Categories, Location Filter & Live Search */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
-                  Product:
-                </Typography>
-                {productCategories.map((cat) => (
-                  <Chip
-                    key={cat}
-                    label={cat}
-                    size="small"
-                    onClick={() => setSelectedProductFilter(cat)}
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: '0.7rem',
-                      bgcolor: selectedProductFilter === cat ? '#4f46e5' : '#f1f5f9',
-                      color: selectedProductFilter === cat ? '#ffffff' : '#475569',
-                      cursor: 'pointer',
-                      '&:hover': { bgcolor: selectedProductFilter === cat ? '#4338ca' : '#e2e8f0' },
-                    }}
-                  />
-                ))}
-
-                {/* Location Filter Dropdown */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
-                    Location:
-                  </Typography>
-                  <Select
-                    size="small"
-                    value={locationFilter}
-                    onChange={(e) => setLocationFilter(e.target.value)}
-                    sx={{
-                      height: 30,
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      bgcolor: '#f8fafc',
-                      borderRadius: 1.5,
-                    }}
-                  >
-                    {locationList.map((loc) => (
-                      <MenuItem key={loc} value={loc}>
-                        {loc === 'All' ? 'All Locations' : loc}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <TextField
-                  size="small"
-                  placeholder="Search code, name, size, color, location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <VoiceButton
-                          isListening={listeningField === 'inventorySearch'}
-                          onClick={() => startVoiceInput('inventorySearch', (val) => setSearchQuery(val))}
-                        />
-                      </InputAdornment>
-                    ),
-                    sx: { fontSize: '0.75rem', height: 36, width: { xs: 200, sm: 260 }, bgcolor: '#f8fafc', borderRadius: 2 },
-                  }}
-                />
-              </Box>
+            {/* Right: Fixed Search Box */}
+            <Box sx={{ flexShrink: 0, width: { xs: '100%', lg: 260 } }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search code, name, size, color, location..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(0);
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <VoiceButton
+                        isListening={listeningField === 'inventorySearch'}
+                        onClick={() => startVoiceInput('inventorySearch', (val) => setSearchQuery(val))}
+                      />
+                    </InputAdornment>
+                  ),
+                  sx: { fontSize: '0.75rem', height: 36, bgcolor: '#f8fafc', borderRadius: 2 },
+                }}
+              />
             </Box>
           </Box>
 
