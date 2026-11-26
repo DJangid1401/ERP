@@ -54,6 +54,7 @@ export default function TasksView({
   triggerToast,
   startVoiceInput,
   listeningField,
+  onNotifyTaskAssigned,
 }) {
   // Page Filters
   const [companyFilter, setCompanyFilter] = useState('All');
@@ -212,6 +213,9 @@ export default function TasksView({
     };
 
     setTasks((prev) => [newTask, ...prev]);
+    if (onNotifyTaskAssigned) {
+      onNotifyTaskAssigned(newTask, newAssignees);
+    }
     triggerToast(
       `Task ${taskId} created with ${newPriority} priority and assigned to ${newAssignees.join(', ')}!`
     );
@@ -352,6 +356,9 @@ export default function TasksView({
       })
     );
 
+    if (onNotifyTaskAssigned) {
+      onNotifyTaskAssigned(taskForForward, [forwardEmployee]);
+    }
     triggerToast(`Task ${taskForForward.id} successfully forwarded to ${forwardEmployee}!`);
     setIsForwardModalOpen(false);
     setTaskForForward(null);

@@ -17,6 +17,11 @@ export default function MainLayout({
   onSearchChange,
   isListening,
   onVoiceClick,
+  notifications,
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
+  onNotificationClick,
+  onLogout,
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,6 +53,11 @@ export default function MainLayout({
           onSearchChange={onSearchChange}
           isListening={isListening}
           onVoiceClick={onVoiceClick}
+          notifications={notifications}
+          onMarkNotificationRead={onMarkNotificationRead}
+          onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+          onNotificationClick={onNotificationClick}
+          onLogout={onLogout}
         />
 
         <Box component="main" sx={{ flex: 1, p: { xs: 2, sm: 3 }, maxWidth: 1600, width: '100%', mx: 'auto' }}>

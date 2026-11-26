@@ -66,7 +66,7 @@ export default function DashboardView({
             iconColor="#059669"
             iconBg="#ecfdf5"
             onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(0, 'All') : onNavigate('Inventory')
             }
           />
           <StatCard
@@ -77,7 +77,7 @@ export default function DashboardView({
             iconColor="#4f46e5"
             iconBg="#eef2ff"
             onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(0, 'Low Stock') : onNavigate('Inventory')
             }
           />
           <StatCard
@@ -88,7 +88,7 @@ export default function DashboardView({
             iconColor="#d97706"
             iconBg="#fffbeb"
             onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(1, 'All') : onNavigate('Inventory')
             }
           />
           <StatCard
@@ -99,7 +99,7 @@ export default function DashboardView({
             iconColor="#e11d48"
             iconBg="#fff1f2"
             onAction={() =>
-              onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
+              onNavigateToInventoryTab ? onNavigateToInventoryTab(2, 'All') : onNavigate('Inventory')
             }
           />
         </Box>
@@ -328,7 +328,7 @@ export default function DashboardView({
           iconColor="#4f46e5"
           iconBg="#eef2ff"
           onAction={() =>
-            onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(0, 'Low Stock') : onNavigate('Inventory')
           }
         />
         <StatCard
@@ -339,7 +339,7 @@ export default function DashboardView({
           iconColor="#059669"
           iconBg="#ecfdf5"
           onAction={() =>
-            onNavigateToInventoryTab ? onNavigateToInventoryTab(0) : onNavigate('Inventory')
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(0, 'All') : onNavigate('Inventory')
           }
         />
         <StatCard
@@ -350,7 +350,7 @@ export default function DashboardView({
           iconColor="#d97706"
           iconBg="#fffbeb"
           onAction={() =>
-            onNavigateToInventoryTab ? onNavigateToInventoryTab(1) : onNavigate('Inventory')
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(1, 'All') : onNavigate('Inventory')
           }
         />
         <StatCard
@@ -361,7 +361,7 @@ export default function DashboardView({
           iconColor="#e11d48"
           iconBg="#fff1f2"
           onAction={() =>
-            onNavigateToInventoryTab ? onNavigateToInventoryTab(2) : onNavigate('Inventory')
+            onNavigateToInventoryTab ? onNavigateToInventoryTab(2, 'All') : onNavigate('Inventory')
           }
         />
       </Box>

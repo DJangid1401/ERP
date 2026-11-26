@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, Card, Typography, Button } from '@mui/material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 import MainLayout from '../../components/layout/MainLayout';
 import ToastNotification from '../../components/common/ToastNotification';
@@ -30,9 +31,12 @@ export default function ErpHubQalaPage() {
   const [selectedCompany, setSelectedCompany] = useState('All');
   const [activeNav, setActiveNav] = useState('Dashboard');
   const [inventoryTab, setInventoryTab] = useState(0);
+  const [inventoryStatusFilter, setInventoryStatusFilter] = useState('All');
+  const [isLoggedOut, setIsLoggedOut] = useState(false);
 
-  const handleNavigateToInventoryTab = (tabIndex) => {
+  const handleNavigateToInventoryTab = (tabIndex, statusFilter = 'All') => {
     setInventoryTab(tabIndex);
+    setInventoryStatusFilter(statusFilter);
     setActiveNav('Inventory');
   };
 
@@ -41,6 +45,58 @@ export default function ErpHubQalaPage() {
   const [stockInRecords, setStockInRecords] = useState(INITIAL_STOCK_IN);
   const [stockOutRecords, setStockOutRecords] = useState(INITIAL_STOCK_OUT);
   const [tasks, setTasks] = useState(INITIAL_TASKS);
+
+  // Employee Task Notifications state
+  const [notifications, setNotifications] = useState(() =>
+    INITIAL_TASKS.map((t, idx) => ({
+      id: `notif-init-${t.id}`,
+      taskId: t.id,
+      title: t.title,
+      assignees: t.assignees || (t.assignee ? [t.assignee] : []),
+      company: t.company,
+      priority: t.priority,
+      message: `${(t.assignees || (t.assignee ? [t.assignee] : ['Employee'])).join(', ')} received task: "${t.title}"`,
+      time: t.createdAt || 'Recently',
+      read: idx >= 2,
+    }))
+  );
+
+  const handleTaskAssignedNotification = (task, targetEmployees) => {
+    const empList = targetEmployees && targetEmployees.length > 0
+      ? targetEmployees
+      : task.assignees || (task.assignee ? [task.assignee] : ['Employee']);
+    const newNotif = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      taskId: task.id,
+      title: task.title,
+      assignees: empList,
+      company: task.company,
+      priority: task.priority,
+      message: `${empList.join(', ')} received task: "${task.title}"`,
+      time: 'Just now',
+      read: false,
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+  };
+
+  const handleMarkNotificationRead = (notifId) => {
+    setNotifications((prev) => prev.map((n) => (n.id === notifId ? { ...n, read: true } : n)));
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleLogout = () => {
+    setIsLoggedOut(true);
+    triggerToast('Logged out successfully', 'info');
+  };
+
+  const handleLogin = () => {
+    setIsLoggedOut(false);
+    setActiveNav('Dashboard');
+    triggerToast('Welcome back to ERP Hub!', 'success');
+  };
 
   // Global search & Voice recognition
   const [globalSearch, setGlobalSearch] = useState('');
@@ -133,6 +189,77 @@ export default function ErpHubQalaPage() {
     }
   };
 
+  if (isLoggedOut) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: '#f8fafc',
+          p: 2,
+        }}
+      >
+        <Card
+          elevation={0}
+          sx={{
+            p: 4,
+            maxWidth: 380,
+            width: '100%',
+            textAlign: 'center',
+            borderRadius: 3,
+            border: '1px solid #e2e8f0',
+            bgcolor: '#ffffff',
+          }}
+        >
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2.5,
+              bgcolor: '#eef2ff',
+              color: '#4f46e5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <LockOutlinedIcon />
+          </Box>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5 }}>
+            Logged Out
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 3 }}>
+            Your ERP Hub session has been closed safely. Click below to sign in again.
+          </Typography>
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={handleLogin}
+            sx={{
+              bgcolor: '#4f46e5',
+              '&:hover': { bgcolor: '#4338ca' },
+              fontWeight: 700,
+              borderRadius: 2,
+              textTransform: 'none',
+            }}
+          >
+            Sign In to ERP Hub
+          </Button>
+        </Card>
+        <ToastNotification
+          open={toast.open}
+          message={toast.message}
+          severity={toast.severity}
+          onClose={handleCloseToast}
+        />
+      </Box>
+    );
+  }
+
   return (
     <MainLayout
       selectedCompany={selectedCompany}
@@ -147,6 +274,11 @@ export default function ErpHubQalaPage() {
       onSearchChange={setGlobalSearch}
       isListening={listeningField === 'globalSearch'}
       onVoiceClick={() => startVoiceInput('globalSearch', (txt) => setGlobalSearch(txt))}
+      notifications={notifications}
+      onMarkNotificationRead={handleMarkNotificationRead}
+      onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+      onNotificationClick={() => setActiveNav('Task')}
+      onLogout={handleLogout}
     >
       <Box className="animate-fade-in">
         {/* VIEW: DASHBOARD */}
@@ -183,6 +315,8 @@ export default function ErpHubQalaPage() {
             listeningField={listeningField}
             currentTab={inventoryTab}
             onTabChange={setInventoryTab}
+            stockStatusFilter={inventoryStatusFilter}
+            onStockStatusChange={setInventoryStatusFilter}
           />
         )}
 
@@ -196,6 +330,7 @@ export default function ErpHubQalaPage() {
             triggerToast={triggerToast}
             startVoiceInput={startVoiceInput}
             listeningField={listeningField}
+            onNotifyTaskAssigned={handleTaskAssignedNotification}
           />
         )}
 

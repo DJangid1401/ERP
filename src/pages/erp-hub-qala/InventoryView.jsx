@@ -59,6 +59,8 @@ export default function InventoryView({
   listeningField,
   currentTab: controlledTab,
   onTabChange,
+  stockStatusFilter: controlledStatusFilter,
+  onStockStatusChange,
 }) {
   const isGlobalMode = selectedCompany === 'All';
   const [internalTab, setInternalTab] = useState(0); // 0: StockList, 1: StockIn, 2: StockOut
@@ -70,7 +72,12 @@ export default function InventoryView({
   const [inBarCompanyFilter, setInBarCompanyFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductFilter, setSelectedProductFilter] = useState('All');
-  const [stockStatusFilter, setStockStatusFilter] = useState('All'); // 'All', 'Optimal', 'Low Stock', 'Out of Stock'
+  const [internalStatusFilter, setInternalStatusFilter] = useState('All'); // 'All', 'Optimal', 'Low Stock', 'Out of Stock'
+  const stockStatusFilter = controlledStatusFilter !== undefined ? controlledStatusFilter : internalStatusFilter;
+  const setStockStatusFilter = (val) => {
+    if (onStockStatusChange) onStockStatusChange(val);
+    setInternalStatusFilter(val);
+  };
   const [locationFilter, setLocationFilter] = useState('All');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -837,7 +844,15 @@ export default function InventoryView({
                       <SearchIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
                     </InputAdornment>
                   ),
-                  sx: { fontSize: '0.75rem', height: 32, width: { xs: 180, sm: 240 }, bgcolor: '#f8fafc', borderRadius: 1.5 },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <VoiceButton
+                        isListening={listeningField === 'inwardSearch'}
+                        onClick={() => startVoiceInput('inwardSearch', (val) => setInwardSearch(val))}
+                      />
+                    </InputAdornment>
+                  ),
+                  sx: { fontSize: '0.75rem', height: 32, width: { xs: 180, sm: 250 }, bgcolor: '#f8fafc', borderRadius: 1.5 },
                 }}
               />
             </Box>
@@ -930,7 +945,15 @@ export default function InventoryView({
                       <SearchIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
                     </InputAdornment>
                   ),
-                  sx: { fontSize: '0.75rem', height: 32, width: { xs: 180, sm: 240 }, bgcolor: '#f8fafc', borderRadius: 1.5 },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <VoiceButton
+                        isListening={listeningField === 'outwardSearch'}
+                        onClick={() => startVoiceInput('outwardSearch', (val) => setOutwardSearch(val))}
+                      />
+                    </InputAdornment>
+                  ),
+                  sx: { fontSize: '0.75rem', height: 32, width: { xs: 180, sm: 250 }, bgcolor: '#f8fafc', borderRadius: 1.5 },
                 }}
               />
             </Box>
