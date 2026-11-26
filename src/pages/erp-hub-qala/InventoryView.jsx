@@ -70,8 +70,16 @@ export default function InventoryView({
   const [inBarCompanyFilter, setInBarCompanyFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductFilter, setSelectedProductFilter] = useState('All');
+  const [stockStatusFilter, setStockStatusFilter] = useState('All'); // 'All', 'Optimal', 'Low Stock', 'Out of Stock'
+  const [locationFilter, setLocationFilter] = useState('All');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Tab 1 & Tab 2 filters
+  const [inwardSearch, setInwardSearch] = useState('');
+  const [inwardCompanyFilter, setInwardCompanyFilter] = useState('All');
+  const [outwardSearch, setOutwardSearch] = useState('');
+  const [outwardCompanyFilter, setOutwardCompanyFilter] = useState('All');
 
   // Modals state
   const [isStockOutModalOpen, setIsStockOutModalOpen] = useState(false);
@@ -106,6 +114,18 @@ export default function InventoryView({
       // Product category filter
       if (selectedProductFilter !== 'All' && item.name !== selectedProductFilter) return false;
 
+      // Stock status filter
+      if (stockStatusFilter === 'Low Stock') {
+        if (!((item.stock || 0) <= (item.minStock || 0) && (item.stock || 0) > 0)) return false;
+      } else if (stockStatusFilter === 'Out of Stock') {
+        if ((item.stock || 0) !== 0) return false;
+      } else if (stockStatusFilter === 'Optimal') {
+        if ((item.stock || 0) <= (item.minStock || 0)) return false;
+      }
+
+      // Location filter
+      if (locationFilter !== 'All' && item.location !== locationFilter) return false;
+
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -113,18 +133,85 @@ export default function InventoryView({
         const matchesName = (item.name || '').toLowerCase().includes(q);
         const matchesSize = (item.size || '').toLowerCase().includes(q);
         const matchesColor = (item.color || '').toLowerCase().includes(q);
-        return matchesCode || matchesName || matchesSize || matchesColor;
+        const matchesLoc = (item.location || '').toLowerCase().includes(q);
+        return matchesCode || matchesName || matchesSize || matchesColor || matchesLoc;
       }
 
       return true;
     });
-  }, [stockItems, isGlobalMode, selectedCompany, inBarCompanyFilter, selectedProductFilter, searchQuery]);
+  }, [
+    stockItems,
+    isGlobalMode,
+    selectedCompany,
+    inBarCompanyFilter,
+    selectedProductFilter,
+    stockStatusFilter,
+    locationFilter,
+    searchQuery,
+  ]);
 
   // Unique product names for filter tabs
   const productCategories = useMemo(() => {
     const set = new Set(stockItems.map((i) => i.name).filter(Boolean));
     return ['All', ...Array.from(set)];
   }, [stockItems]);
+
+  // Unique locations for filter dropdown
+  const locationList = useMemo(() => {
+    const set = new Set(stockItems.map((i) => i.location).filter(Boolean));
+    return ['All', ...Array.from(set)];
+  }, [stockItems]);
+
+  // Active filters helper & reset
+  const hasActiveStockFilters =
+    selectedProductFilter !== 'All' ||
+    stockStatusFilter !== 'All' ||
+    locationFilter !== 'All' ||
+    searchQuery.trim() !== '' ||
+    (isGlobalMode && inBarCompanyFilter !== 'All');
+
+  const handleResetStockFilters = () => {
+    setSelectedProductFilter('All');
+    setStockStatusFilter('All');
+    setLocationFilter('All');
+    setSearchQuery('');
+    setInBarCompanyFilter('All');
+    setPage(0);
+  };
+
+  // Filtered Stock IN records
+  const filteredStockIn = useMemo(() => {
+    return stockInRecords.filter((rec) => {
+      if (!isGlobalMode && rec.company !== selectedCompany) return false;
+      if (isGlobalMode && inwardCompanyFilter !== 'All' && rec.company !== inwardCompanyFilter) return false;
+      if (inwardSearch.trim()) {
+        const q = inwardSearch.toLowerCase();
+        const matchesId = (rec.id || '').toLowerCase().includes(q);
+        const matchesCode = (rec.code || '').toLowerCase().includes(q);
+        const matchesName = (rec.name || '').toLowerCase().includes(q);
+        const matchesSource = (rec.source || '').toLowerCase().includes(q);
+        return matchesId || matchesCode || matchesName || matchesSource;
+      }
+      return true;
+    });
+  }, [stockInRecords, isGlobalMode, selectedCompany, inwardCompanyFilter, inwardSearch]);
+
+  // Filtered Stock OUT records
+  const filteredStockOut = useMemo(() => {
+    return stockOutRecords.filter((rec) => {
+      if (!isGlobalMode && rec.company !== selectedCompany) return false;
+      if (isGlobalMode && outwardCompanyFilter !== 'All' && rec.company !== outwardCompanyFilter) return false;
+      if (outwardSearch.trim()) {
+        const q = outwardSearch.toLowerCase();
+        const matchesId = (rec.id || '').toLowerCase().includes(q);
+        const matchesCode = (rec.code || '').toLowerCase().includes(q);
+        const matchesName = (rec.name || '').toLowerCase().includes(q);
+        const matchesCust = (rec.customer || rec.destination || '').toLowerCase().includes(q);
+        return matchesId || matchesCode || matchesName || matchesCust;
+      }
+      return true;
+    });
+  }, [stockOutRecords, isGlobalMode, selectedCompany, outwardCompanyFilter, outwardSearch]);
 
   // Selected item for Stock OUT
   const selectedOutwardItem = useMemo(() => {
@@ -434,51 +521,127 @@ export default function InventoryView({
       {/* TAB 0: FULL STOCK LIST */}
       {currentTab === 0 && (
         <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', overflow: 'hidden', bgcolor: '#ffffff' }}>
-          {/* Filter Bar: Categories & Search */}
-          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', flexWrap: 'wrap', gap: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>Product:</Typography>
-              {productCategories.map((cat) => (
-                <Chip
-                  key={cat}
-                  label={cat}
+          {/* Filter Bar: Stock Status, Categories, Location & Search */}
+          <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5, borderBottom: '1px solid #f1f5f9' }}>
+            {/* Row 1: Stock Status Filter Chips & Reset Filters */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
+                  Stock Status:
+                </Typography>
+                {[
+                  { label: `All Items (${filteredStock.length})`, value: 'All', color: '#1e293b' },
+                  { label: 'Optimal Stock', value: 'Optimal', color: '#059669' },
+                  { label: 'Low Stock Alerts', value: 'Low Stock', color: '#d97706' },
+                  { label: 'Out of Stock', value: 'Out of Stock', color: '#e11d48' },
+                ].map((st) => (
+                  <Chip
+                    key={st.value}
+                    label={st.label}
+                    size="small"
+                    onClick={() => setStockStatusFilter(st.value)}
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.7rem',
+                      bgcolor: stockStatusFilter === st.value ? st.color : '#f8fafc',
+                      color: stockStatusFilter === st.value ? '#ffffff' : '#475569',
+                      border: '1px solid #e2e8f0',
+                      cursor: 'pointer',
+                    }}
+                  />
+                ))}
+              </Box>
+
+              {hasActiveStockFilters && (
+                <Button
                   size="small"
-                  onClick={() => setSelectedProductFilter(cat)}
+                  onClick={handleResetStockFilters}
                   sx={{
+                    fontSize: '0.65rem',
                     fontWeight: 700,
-                    fontSize: '0.7rem',
-                    bgcolor: selectedProductFilter === cat ? '#4f46e5' : '#f1f5f9',
-                    color: selectedProductFilter === cat ? '#ffffff' : '#475569',
-                    cursor: 'pointer',
-                    '&:hover': { bgcolor: selectedProductFilter === cat ? '#4338ca' : '#e2e8f0' },
+                    color: '#e11d48',
+                    textTransform: 'none',
+                    py: 0.2,
                   }}
-                />
-              ))}
+                >
+                  Reset Filters
+                </Button>
+              )}
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <TextField
-                size="small"
-                placeholder="Search code, name, size, color..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <VoiceButton
-                        isListening={listeningField === 'inventorySearch'}
-                        onClick={() => startVoiceInput('inventorySearch', (val) => setSearchQuery(val))}
-                      />
-                    </InputAdornment>
-                  ),
-                  sx: { fontSize: '0.75rem', height: 36, width: { xs: 200, sm: 260 }, bgcolor: '#f8fafc', borderRadius: 2 },
-                }}
-              />
+            {/* Row 2: Product Categories, Location Filter & Live Search */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
+                  Product:
+                </Typography>
+                {productCategories.map((cat) => (
+                  <Chip
+                    key={cat}
+                    label={cat}
+                    size="small"
+                    onClick={() => setSelectedProductFilter(cat)}
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.7rem',
+                      bgcolor: selectedProductFilter === cat ? '#4f46e5' : '#f1f5f9',
+                      color: selectedProductFilter === cat ? '#ffffff' : '#475569',
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: selectedProductFilter === cat ? '#4338ca' : '#e2e8f0' },
+                    }}
+                  />
+                ))}
+
+                {/* Location Filter Dropdown */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: '#64748b' }}>
+                    Location:
+                  </Typography>
+                  <Select
+                    size="small"
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    sx={{
+                      height: 30,
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      bgcolor: '#f8fafc',
+                      borderRadius: 1.5,
+                    }}
+                  >
+                    {locationList.map((loc) => (
+                      <MenuItem key={loc} value={loc}>
+                        {loc === 'All' ? 'All Locations' : loc}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TextField
+                  size="small"
+                  placeholder="Search code, name, size, color, location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <VoiceButton
+                          isListening={listeningField === 'inventorySearch'}
+                          onClick={() => startVoiceInput('inventorySearch', (val) => setSearchQuery(val))}
+                        />
+                      </InputAdornment>
+                    ),
+                    sx: { fontSize: '0.75rem', height: 36, width: { xs: 200, sm: 260 }, bgcolor: '#f8fafc', borderRadius: 2 },
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
 
@@ -584,9 +747,53 @@ export default function InventoryView({
       {/* TAB 1: STOCK IN RECORDS */}
       {currentTab === 1 && (
         <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', p: 2, bgcolor: '#ffffff' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5 }}>
-            Inward GRN (Stock In Ledger)
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                Inward GRN (Stock In Ledger)
+              </Typography>
+              <Chip
+                size="small"
+                label={`${filteredStockIn.length} records`}
+                sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: '#ecfdf5', color: '#059669' }}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {isGlobalMode && (
+                <Select
+                  size="small"
+                  value={inwardCompanyFilter}
+                  onChange={(e) => setInwardCompanyFilter(e.target.value)}
+                  sx={{ height: 32, fontSize: '0.75rem', fontWeight: 700, bgcolor: '#f8fafc', borderRadius: 1.5 }}
+                >
+                  <MenuItem value="All">All Companies</MenuItem>
+                  {companies
+                    .filter((c) => c.id !== 'All')
+                    .map((c) => (
+                      <MenuItem key={c.id} value={c.id}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </Select>
+              )}
+              <TextField
+                size="small"
+                placeholder="Search GRN #, code, product..."
+                value={inwardSearch}
+                onChange={(e) => setInwardSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
+                    </InputAdornment>
+                  ),
+                  sx: { fontSize: '0.75rem', height: 32, width: { xs: 180, sm: 240 }, bgcolor: '#f8fafc', borderRadius: 1.5 },
+                }}
+              />
+            </Box>
+          </Box>
+
           <TableContainer component={Paper} elevation={0}>
             <Table size="small">
               <TableHead sx={{ bgcolor: '#f8fafc' }}>
@@ -602,20 +809,28 @@ export default function InventoryView({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {stockInRecords.map((rec) => (
-                  <TableRow key={rec.id} hover>
-                    <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace', color: '#4f46e5' }}>{rec.id}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>{rec.date}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>{rec.company}</TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace' }}>{rec.code}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{rec.name}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>{rec.mode}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#059669' }}>
-                      +{rec.qty} {rec.unit || 'PAC'}
+                {filteredStockIn.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} sx={{ textAlign: 'center', py: 3, color: '#94a3b8', fontSize: '0.75rem' }}>
+                      No inward records match the filters.
                     </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', color: '#64748b' }}>{rec.source}</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredStockIn.map((rec) => (
+                    <TableRow key={rec.id} hover>
+                      <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace', color: '#4f46e5' }}>{rec.id}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{rec.date}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{rec.company}</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace' }}>{rec.code}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{rec.name}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{rec.mode}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#059669' }}>
+                        +{rec.qty} {rec.unit || 'PAC'}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', color: '#64748b' }}>{rec.source}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -625,9 +840,53 @@ export default function InventoryView({
       {/* TAB 2: STOCK OUT RECORDS */}
       {currentTab === 2 && (
         <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', p: 2, bgcolor: '#ffffff' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1.5 }}>
-            Outward Dispatches (Stock Out Ledger)
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                Outward Dispatches (Stock Out Ledger)
+              </Typography>
+              <Chip
+                size="small"
+                label={`${filteredStockOut.length} records`}
+                sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: '#fff1f2', color: '#e11d48' }}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {isGlobalMode && (
+                <Select
+                  size="small"
+                  value={outwardCompanyFilter}
+                  onChange={(e) => setOutwardCompanyFilter(e.target.value)}
+                  sx={{ height: 32, fontSize: '0.75rem', fontWeight: 700, bgcolor: '#f8fafc', borderRadius: 1.5 }}
+                >
+                  <MenuItem value="All">All Companies</MenuItem>
+                  {companies
+                    .filter((c) => c.id !== 'All')
+                    .map((c) => (
+                      <MenuItem key={c.id} value={c.id}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                </Select>
+              )}
+              <TextField
+                size="small"
+                placeholder="Search Dispatch #, customer, code..."
+                value={outwardSearch}
+                onChange={(e) => setOutwardSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
+                    </InputAdornment>
+                  ),
+                  sx: { fontSize: '0.75rem', height: 32, width: { xs: 180, sm: 240 }, bgcolor: '#f8fafc', borderRadius: 1.5 },
+                }}
+              />
+            </Box>
+          </Box>
+
           <TableContainer component={Paper} elevation={0}>
             <Table size="small">
               <TableHead sx={{ bgcolor: '#f8fafc' }}>
@@ -643,20 +902,28 @@ export default function InventoryView({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {stockOutRecords.map((rec) => (
-                  <TableRow key={rec.id} hover>
-                    <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace', color: '#e11d48' }}>{rec.id}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>{rec.date}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>{rec.company}</TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace' }}>{rec.code}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{rec.name}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem' }}>{rec.customer || rec.destination}</TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#e11d48' }}>
-                      -{rec.qty} {rec.unit || 'PAC'}
+                {filteredStockOut.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} sx={{ textAlign: 'center', py: 3, color: '#94a3b8', fontSize: '0.75rem' }}>
+                      No outward records match the filters.
                     </TableCell>
-                    <TableCell sx={{ fontSize: '0.75rem', fontWeight: 700 }}>₹{rec.price || 0}</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredStockOut.map((rec) => (
+                    <TableRow key={rec.id} hover>
+                      <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace', color: '#e11d48' }}>{rec.id}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{rec.date}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{rec.company}</TableCell>
+                      <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace' }}>{rec.code}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{rec.name}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{rec.customer || rec.destination}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#e11d48' }}>
+                        -{rec.qty} {rec.unit || 'PAC'}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem', fontWeight: 700 }}>₹{rec.price || 0}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
