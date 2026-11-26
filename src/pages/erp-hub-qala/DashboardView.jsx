@@ -113,7 +113,17 @@ export default function DashboardView({
             Switch directly to individual company workspaces and inventories
           </Typography>
 
-          <Grid container spacing={2.5}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(4, 1fr)',
+              },
+              gap: 2.5,
+            }}
+          >
             {companies
               .filter((c) => c.id !== 'All')
               .map((comp) => {
@@ -124,107 +134,106 @@ export default function DashboardView({
                   .reduce((sum, it) => sum + it.stock * (it.price || it.unitPrice || 0), 0);
 
                 return (
-                  <Grid item xs={12} sm={6} md={3} key={comp.id}>
-                    <Card
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        borderRadius: 3,
-                        border: '1px solid #e2e8f0',
-                        backgroundColor: '#ffffff',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        height: '100%',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          borderColor: '#cbd5e1',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                        },
-                      }}
-                    >
-                      <Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0f172a' }}>
-                            {comp.name}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label={comp.short}
-                            sx={{
-                              height: 20,
-                              fontSize: '0.65rem',
-                              fontWeight: 700,
-                              bgcolor: '#f1f5f9',
-                              color: '#475569',
-                            }}
-                          />
-                        </Box>
-                        <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 2 }}>
-                          {comp.sector} • {comp.location}
+                  <Card
+                    key={comp.id}
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      borderRadius: 3,
+                      border: '1px solid #e2e8f0',
+                      backgroundColor: '#ffffff',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      height: '100%',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        borderColor: '#cbd5e1',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                      },
+                    }}
+                  >
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0f172a' }}>
+                          {comp.name}
                         </Typography>
-
-                        <Box
+                        <Chip
+                          size="small"
+                          label={comp.short}
                           sx={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: 1,
-                            p: 1.2,
-                            borderRadius: 2,
-                            bgcolor: '#f8fafc',
-                            mb: 2,
-                            textAlign: 'center',
+                            height: 20,
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            bgcolor: '#f1f5f9',
+                            color: '#475569',
                           }}
-                        >
-                          <Box>
-                            <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#64748b', display: 'block' }}>
-                              Orders
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 800, color: '#0f172a' }}>
-                              {ops.metrics?.orders || 142}
-                            </Typography>
-                          </Box>
-                          <Box>
-                            <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#64748b', display: 'block' }}>
-                              SKUs
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 800, color: '#0f172a' }}>
-                              {compStockCount}
-                            </Typography>
-                          </Box>
-                          <Box>
-                            <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#64748b', display: 'block' }}>
-                              Value
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 800, color: '#059669' }}>
-                              ₹{(compValuation / 100000).toFixed(1)}L
-                            </Typography>
-                          </Box>
-                        </Box>
+                        />
                       </Box>
+                      <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 2 }}>
+                        {comp.sector} • {comp.location}
+                      </Typography>
 
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        size="small"
-                        onClick={() => onSelectCompany(comp.id)}
-                        endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
+                      <Box
                         sx={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: 1,
+                          p: 1.2,
                           borderRadius: 2,
-                          textTransform: 'none',
-                          fontWeight: 700,
-                          fontSize: '0.75rem',
-                          backgroundColor: '#0f172a',
-                          '&:hover': { backgroundColor: '#1e293b' },
+                          bgcolor: '#f8fafc',
+                          mb: 2,
+                          textAlign: 'center',
                         }}
                       >
-                        Open {comp.name} ERP
-                      </Button>
-                    </Card>
-                  </Grid>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#64748b', display: 'block' }}>
+                            Orders
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 800, color: '#0f172a' }}>
+                            {ops.metrics?.orders || 142}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#64748b', display: 'block' }}>
+                            SKUs
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 800, color: '#0f172a' }}>
+                            {compStockCount}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#64748b', display: 'block' }}>
+                            Value
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 800, color: '#059669' }}>
+                            ₹{(compValuation / 100000).toFixed(1)}L
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      size="small"
+                      onClick={() => onSelectCompany(comp.id)}
+                      endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        backgroundColor: '#0f172a',
+                        '&:hover': { backgroundColor: '#1e293b' },
+                      }}
+                    >
+                      Open {comp.name} ERP
+                    </Button>
+                  </Card>
                 );
               })}
-          </Grid>
+          </Box>
         </Box>
 
         {/* Consolidated Activity Stream */}
