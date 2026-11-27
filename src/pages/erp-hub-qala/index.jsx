@@ -9,6 +9,7 @@ import InventoryView from './InventoryView';
 import TasksView from './TasksView';
 import GovernanceView from './GovernanceView';
 import WorkspacesView from './WorkspacesView';
+import HardwareIntegrationView from './HardwareIntegrationView';
 
 import {
   COMPANIES,
@@ -397,10 +398,25 @@ export default function ErpHubQalaPage() {
           />
         )}
 
+        {/* VIEW: HARDWARE INTEGRATION */}
+        {activeNav === 'Hardware' && (
+          <HardwareIntegrationView
+            currentUser={currentUser}
+            stockItems={stockItems}
+            setStockItems={setStockItems}
+            stockInRecords={stockInRecords}
+            setStockInRecords={setStockInRecords}
+            stockOutRecords={stockOutRecords}
+            setStockOutRecords={setStockOutRecords}
+            triggerToast={triggerToast}
+          />
+        )}
+
         {/* VIEW: WORKSPACES (Grid or specific department workspace) */}
         {activeNav !== 'Dashboard' &&
           activeNav !== 'Inventory' &&
           activeNav !== 'Task' &&
+          activeNav !== 'Hardware' &&
           !['HRMS', 'User', 'Role', 'Rights', 'Control'].includes(activeNav) && (
             <WorkspacesView
               activeNav={activeNav}

@@ -177,6 +177,7 @@ export default function Sidebar({
               { id: 'Role', label: 'Role Scopes', desc: 'Role definitions & levels' },
               { id: 'Rights', label: 'Rights Matrix', desc: 'RBAC module permissions' },
               { id: 'Control', label: 'System Control', desc: 'Governance & group policies' },
+              { id: 'Hardware', label: 'Hardware Integration', desc: 'Honeywell EDA51 & Citizen printer' },
             ].map((item) => {
               const isSelected = activeNav === item.id;
               return (
@@ -302,6 +303,33 @@ export default function Sidebar({
                 <Typography variant="caption" sx={{ fontSize: '10px', opacity: 0.6, fontFamily: 'monospace' }}>
                   Alt+W
                 </Typography>
+              </Button>
+
+              <Button
+                fullWidth
+                variant={activeNav === 'Hardware' ? 'contained' : 'text'}
+                onClick={() => {
+                  onSelectNav('Hardware');
+                  if (onCloseMobile) onCloseMobile();
+                }}
+                sx={{
+                  py: 0.7,
+                  px: 1.5,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  justifyContent: 'flex-start',
+                  fontWeight: 700,
+                  fontSize: '11.5px',
+                  backgroundColor: activeNav === 'Hardware' ? '#4f46e5' : '#f8fafc',
+                  color: activeNav === 'Hardware' ? '#ffffff' : '#334155',
+                  border: '1px solid',
+                  borderColor: activeNav === 'Hardware' ? '#4f46e5' : '#e2e8f0',
+                  '&:hover': {
+                    backgroundColor: activeNav === 'Hardware' ? '#4338ca' : '#f1f5f9',
+                  },
+                }}
+              >
+                Hardware Integration
               </Button>
             </Box>
 
