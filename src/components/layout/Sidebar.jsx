@@ -22,6 +22,7 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import CheckIcon from '@mui/icons-material/Check';
 import GridViewIcon from '@mui/icons-material/GridView';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 export default function Sidebar({
   selectedCompany,
@@ -36,6 +37,8 @@ export default function Sidebar({
   onToggleCollapse,
   mobileOpen,
   onCloseMobile,
+  onLogout,
+  currentUser,
 }) {
   const [companyMenuAnchor, setCompanyMenuAnchor] = useState(null);
   const isGlobalMode = selectedCompany === 'All';
@@ -364,18 +367,40 @@ export default function Sidebar({
       </Box>
 
       {/* Bottom Profile Footer */}
-      <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Avatar sx={{ width: 32, height: 32, bgcolor: '#059669', fontSize: '0.8rem', fontWeight: 800 }}>
-          D
+      <Box sx={{ p: 1.75, borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+        <Avatar sx={{ width: 32, height: 32, bgcolor: '#059669', fontSize: '0.8rem', fontWeight: 800, flexShrink: 0 }}>
+          {(currentUser?.name || 'Deepak').charAt(0).toUpperCase()}
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="caption" sx={{ fontWeight: 800, color: '#0f172a', display: 'block', truncate: true }}>
-            Deepak
+          <Typography variant="caption" sx={{ fontWeight: 800, color: '#0f172a', display: 'block', noWrap: true, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {currentUser?.name ? currentUser.name.split(' ')[0] : 'Deepak'}
           </Typography>
-          <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.65rem', display: 'block', truncate: true }}>
-            {isGlobalMode ? 'Group Super Admin' : currentCompanyObj.name}
+          <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.65rem', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {isGlobalMode ? (currentUser?.role || 'Group Super Admin') : currentCompanyObj.name}
           </Typography>
         </Box>
+        <Button
+          size="small"
+          onClick={onLogout}
+          startIcon={<LogoutIcon sx={{ fontSize: 14 }} />}
+          title="Logout"
+          sx={{
+            flexShrink: 0,
+            minWidth: 'auto',
+            px: 1,
+            py: 0.4,
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            textTransform: 'none',
+            borderRadius: 1.5,
+            color: '#e11d48',
+            bgcolor: '#fff1f2',
+            border: '1px solid #fecdd3',
+            '&:hover': { bgcolor: '#ffe4e6', borderColor: '#fda4af' },
+          }}
+        >
+          Logout
+        </Button>
       </Box>
     </Box>
   );

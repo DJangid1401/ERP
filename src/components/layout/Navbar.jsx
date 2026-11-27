@@ -17,7 +17,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import LogoutIcon from '@mui/icons-material/Logout';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import VoiceButton from '../buttons/VoiceButton';
@@ -35,7 +34,6 @@ export default function Navbar({
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   onNotificationClick,
-  onLogout,
 }) {
   const [notifAnchorEl, setNotifAnchorEl] = useState(null);
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -330,30 +328,6 @@ export default function Navbar({
               )}
             </Box>
           </Popover>
-
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={onLogout}
-            startIcon={<LogoutIcon sx={{ fontSize: 15 }} />}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: '0.75rem',
-              borderRadius: 2,
-              color: '#e11d48',
-              borderColor: '#fecdd3',
-              backgroundColor: '#fff1f2',
-              '&:hover': {
-                backgroundColor: '#ffe4e6',
-                borderColor: '#fda4af',
-              },
-              px: 1.25,
-              py: 0.4,
-            }}
-          >
-            Logout
-          </Button>
         </Box>
       </Toolbar>
     </AppBar>

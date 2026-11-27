@@ -22,6 +22,7 @@ export default function MainLayout({
   onMarkAllNotificationsRead,
   onNotificationClick,
   onLogout,
+  currentUser,
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,6 +42,8 @@ export default function MainLayout({
         onToggleCollapse={() => setCollapsed(true)}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
+        onLogout={onLogout}
+        currentUser={currentUser}
       />
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -57,7 +60,6 @@ export default function MainLayout({
           onMarkNotificationRead={onMarkNotificationRead}
           onMarkAllNotificationsRead={onMarkAllNotificationsRead}
           onNotificationClick={onNotificationClick}
-          onLogout={onLogout}
         />
 
         <Box component="main" sx={{ flex: 1, p: { xs: 2, sm: 3 }, maxWidth: 1600, width: '100%', mx: 'auto' }}>

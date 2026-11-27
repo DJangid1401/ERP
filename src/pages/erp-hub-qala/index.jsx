@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Box, Card, Typography, Button } from '@mui/material';
+import { Box, Card, Typography, Button, TextField } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
 import MainLayout from '../../components/layout/MainLayout';
@@ -45,6 +45,20 @@ export default function ErpHubQalaPage() {
   const [stockInRecords, setStockInRecords] = useState(INITIAL_STOCK_IN);
   const [stockOutRecords, setStockOutRecords] = useState(INITIAL_STOCK_OUT);
   const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [users, setUsers] = useState(() =>
+    INITIAL_USERS.map((u) => ({
+      ...u,
+      loginId: u.loginId || u.email,
+      password: u.password || '123456',
+    }))
+  );
+  const [currentUser, setCurrentUser] = useState(() => ({
+    ...INITIAL_USERS[0],
+    loginId: INITIAL_USERS[0].email,
+    password: '123456',
+  }));
+  const [loginIdInput, setLoginIdInput] = useState(INITIAL_USERS[0].email);
+  const [loginPassInput, setLoginPassInput] = useState('123456');
 
   // Employee Task Notifications state
   const [notifications, setNotifications] = useState(() =>
@@ -88,14 +102,26 @@ export default function ErpHubQalaPage() {
   };
 
   const handleLogout = () => {
+    setLoginIdInput(currentUser?.loginId || currentUser?.email || users[0]?.loginId || '');
+    setLoginPassInput(currentUser?.password || '123456');
     setIsLoggedOut(true);
     triggerToast('Logged out successfully', 'info');
   };
 
   const handleLogin = () => {
+    const matched = users.find(
+      (u) =>
+        (u.loginId === loginIdInput.trim() || u.email === loginIdInput.trim()) &&
+        u.password === loginPassInput
+    );
+    if (!matched) {
+      triggerToast('Invalid Login ID or Password', 'error');
+      return;
+    }
+    setCurrentUser(matched);
     setIsLoggedOut(false);
     setActiveNav('Dashboard');
-    triggerToast('Welcome back to ERP Hub!', 'success');
+    triggerToast(`Welcome back, ${matched.name}!`, 'success');
   };
 
   // Global search & Voice recognition
@@ -230,11 +256,31 @@ export default function ErpHubQalaPage() {
             <LockOutlinedIcon />
           </Box>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.5 }}>
-            Logged Out
+            ERP Hub Sign In
           </Typography>
-          <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 3 }}>
-            Your ERP Hub session has been closed safely. Click below to sign in again.
+          <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 2.5 }}>
+            Enter your employee Login ID and Password to continue.
           </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2.5, textAlign: 'left' }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Login ID"
+              value={loginIdInput}
+              onChange={(e) => setLoginIdInput(e.target.value)}
+            />
+            <TextField
+              fullWidth
+              size="small"
+              type="password"
+              label="Password"
+              value={loginPassInput}
+              onChange={(e) => setLoginPassInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleLogin();
+              }}
+            />
+          </Box>
           <Button
             fullWidth
             variant="contained"
@@ -279,6 +325,7 @@ export default function ErpHubQalaPage() {
       onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
       onNotificationClick={() => setActiveNav('Task')}
       onLogout={handleLogout}
+      currentUser={currentUser}
     >
       <Box className="animate-fade-in">
         {/* VIEW: DASHBOARD */}
@@ -340,6 +387,9 @@ export default function ErpHubQalaPage() {
             activeNav={activeNav}
             initialEmployees={INITIAL_EMPLOYEES}
             initialUsers={INITIAL_USERS}
+            users={users}
+            setUsers={setUsers}
+            companies={COMPANIES}
             initialRoles={INITIAL_ROLES}
             rightsModules={RIGHTS_MODULES}
             initialRightsMatrix={INITIAL_RIGHTS_MATRIX}
