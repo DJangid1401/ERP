@@ -181,7 +181,7 @@ export default function Sidebar({
             ].map((item) => {
               const isSelected = activeNav === item.id;
               return (
-                <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+                <ListItem key={item.id} disablePadding sx={{ mb: 0.25 }}>
                   <ListItemButton
                     selected={isSelected}
                     onClick={() => {
@@ -190,7 +190,7 @@ export default function Sidebar({
                     }}
                     sx={{
                       borderRadius: 2,
-                      py: 0.8,
+                      py: 0.5,
                       px: 1.5,
                       '&.Mui-selected': {
                         backgroundColor: '#4f46e5',
@@ -204,8 +204,10 @@ export default function Sidebar({
                     <ListItemText
                       primary={item.label}
                       secondary={item.desc}
-                      primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }}
-                      secondaryTypographyProps={{ fontSize: '0.65rem' }}
+                      slotProps={{
+                        primary: { sx: { fontSize: '14px', fontWeight: 500, lineHeight: 1.3 } },
+                        secondary: { sx: { fontSize: '11.5px', lineHeight: 1.3, mt: 0.1 } },
+                      }}
                     />
                     {item.badge !== undefined && (
                       <Box
